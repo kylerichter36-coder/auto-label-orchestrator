@@ -1,0 +1,12 @@
+# Core Dependencies for Auto-Label Orchestrator
+# Lightweight and optimized for Orange Pi PC (1GB RAM)
+
+google-genai>=1.0.0
+aiosmtpd>=1.4.6
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+aiohttp>=3.9.0
+
+# Simulation & Testing utilities
+reportlab>=4.0.0
+pillow>=10.0.0

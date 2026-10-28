@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto-Label Orchestrator | BarTender Web</title>
+  <style>
+    :root {
+      --bg: #18191c;
+      --panel: #202225;
+      --panel-border: #2f3136;
+      --text: #e0e2e5;
+      --text-muted: #8e9297;
+      --accent: #007acc;
+      --accent-hover: #0098ff;
+      --success: #3ba55d;
+      --warning: #faa81a;
+      --danger: #ed4245;
+      --color-black: #2c2f33;
+      --color-cyan: #00bcd4;
+      --color-magenta: #e91e63;
+      --color-yellow: #ffeb3b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
+    
+    /* Header */
+    header { background-color: var(--panel); border-bottom: 1px solid var(--panel-border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo-group { display: flex; align-items: center; gap: 12px; }
+    .logo-badge { background: linear-gradient(135deg, #007acc, #00bcd4); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 13px; letter-spacing: 0.5px; }
+    .title { font-size: 18px; font-weight: 600; }
+    .status-group { display: flex; align-items: center; gap: 16px; font-size: 13px; }
+    .status-pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; border: 1px solid var(--panel-border); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); }
+
+    /* Roll Action Banner */
+    .roll-banner { margin: 20px 24px 0 24px; background: linear-gradient(90deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .roll-info h3 { font-size: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .roll-info p { font-size: 13px; color: var(--text-muted); }
+    .btn-batch-print { background-color: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+    .btn-batch-print:hover { opacity: 0.9; }
+
+    /* Color Tabs */
+    .tabs-nav { margin: 20px 24px 0 24px; display: flex; gap: 8px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; }
+    .tab-btn { background: none; border: 1px solid transparent; color: var(--text-muted); padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+    .tab-btn:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+    .tab-btn.active { background: var(--panel); border-color: var(--panel-border); color: white; font-weight: 600; }
+    .badge { padding: 2px 6px; border-radius: 10px; font-size: 11px; background: rgba(255,255,255,0.1); }
+    .badge-black { background: #333; color: #fff; border: 1px solid #555; }
+    .badge-cyan { background: var(--color-cyan); color: #000; font-weight: bold; }
+    .badge-magenta { background: var(--color-magenta); color: #fff; font-weight: bold; }
+    .badge-yellow { background: var(--color-yellow); color: #000; font-weight: bold; }
+
+    /* Content Area */
+    .content-area { margin: 20px 24px; }
+    .label-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+
+    /* BarTender-style Label Card */
+    .label-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+    .label-header { background: rgba(0,0,0,0.2); padding: 8px 12px; font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; border-bottom: 1px solid var(--panel-border); }
+    .label-preview-box { padding: 16px; background: #fff; color: #000; margin: 12px; border-radius: 4px; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); min-height: 140px; display: flex; flex-direction: column; justify-content: space-between; border: 2px solid #ccc; }
+    .label-title { font-size: 16px; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
+    .label-desc { font-size: 12px; color: #555; margin-top: 4px; }
+    .label-note { background: #fffae6; border: 1px dashed #d48800; padding: 4px 6px; font-size: 11px; border-radius: 2px; margin-top: 6px; color: #b35b00; font-weight: 600; }
+    .label-barcode-mock { height: 28px; background: repeating-linear-gradient(90deg, #000, #000 2px, transparent 2px, transparent 5px); margin-top: 10px; }
+    
+    .label-controls { padding: 12px; background: rgba(0,0,0,0.1); border-top: 1px solid var(--panel-border); display: flex; align-items: center; justify-content: space-between; }
+    .qty-stepper { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--panel-border); border-radius: 4px; padding: 2px; }
+    .qty-btn { background: none; border: none; color: var(--text); width: 26px; height: 26px; border-radius: 2px; cursor: pointer; font-size: 14px; font-weight: bold; }
+    .qty-btn:hover { background: rgba(255,255,255,0.1); }
+    .qty-input { width: 44px; text-align: center; background: none; border: none; color: white; font-weight: bold; font-size: 14px; }
+    .btn-print-single { background-color: var(--accent); color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-print-single:hover { background-color: var(--accent-hover); }
+
+    /* Outer Box Card */
+    .outer-box-card { background: var(--panel); border: 2px solid #475569; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; }
+    .box-title { font-size: 18px; font-weight: bold; color: #38bdf8; }
+    .box-item-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); font-size: 14px; }
+    
+    /* Confirmation Alert Banner */
+    .alert-banner { display: none; margin: 20px 24px 0 24px; background: rgba(250, 168, 26, 0.15); border: 1px solid var(--warning); border-radius: 8px; padding: 16px; }
+    .alert-banner h4 { color: var(--warning); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-group">
+      <span class="logo-badge">PPLB</span>
+      <h1 class="title">Auto-Label Orchestrator</h1>
+    </div>
+    <div class="status-group">
+      <div class="status-pill"><span class="dot"></span> Lexmark: 192.168.50.2</div>
+      <div class="status-pill"><span class="dot"></span> Argox OS-214: USB Ready</div>
+      <div class="status-pill"><span class="dot"></span> Gemini Free Pool: Active</div>
+    </div>
+  </header>
+
+  <!-- Warning Banner for Ambiguous Handwriting -->
+  <div id="alertBanner" class="alert-banner">
+    <h4>⚠️ Verification Needed: Hand-Written Ambiguity</h4>
+    <p id="alertReason">Quote QT-90124 line 2 has ambiguous handwritten quantity.</p>
+    <div style="margin-top: 10px;">
+      <button class="btn-print-single" onclick="approvePending()">Approve & Enqueue</button>
+    </div>
+  </div>
+
+  <!-- Smart Roll Action Banner -->
+  <div class="roll-banner">
+    <div class="roll-info">
+      <h3 id="currentRollTitle">⚫ ACTIVE ROLL: BLACK</h3>
+      <p id="currentRollDesc">30 Black labels ready to print. Continuous batch run queued.</p>
+    </div>
+    <div>
+      <button class="btn-batch-print" id="batchPrintBtn" onclick="printActiveColorBatch()">Print Batch (30 Labels)</button>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('ALL')">All <span class="badge" id="badgeAll">0</span></button>
+    <button class="tab-btn" onclick="switchTab('BLACK')">⚫ Black <span class="badge badge-black" id="badgeBlack">0</span></button>
+    <button class="tab-btn" onclick="switchTab('CYAN')">🔵 Cyan <span class="badge badge-cyan" id="badgeCyan">0</span></button>
+    <button class="tab-btn" onclick="switchTab('MAGENTA')">🔴 Magenta <span class="badge badge-magenta" id="badgeMagenta">0</span></button>
+    <button class="tab-btn" onclick="switchTab('YELLOW')">🟡 Yellow <span class="badge badge-yellow" id="badgeYellow">0</span></button>
+    <button class="tab-btn" onclick="switchTab('OUTER_BOX')">📦 Outer Boxes <span class="badge" id="badgeBox">0</span></button>
+  </div>
+
+  <!-- Label Grid Area -->
+  <div class="content-area">
+    <div id="labelsGrid" class="label-grid">
+      <!-- Dynamically filled with BarTender-like cards -->
+    </div>
+  </div>
+
+  <script>
+    let activeTab = 'BLACK';
+    let queueData = { queues: {}, outer_boxes: [] };
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        queueData = data;
+        updateUI();
+      } catch (err) {
+        console.error("Failed to load queue data:", err);
+      }
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      renderItems();
+      updateBanner();
+    }
+
+    function updateBanner() {
+      const bannerTitle = document.getElementById('currentRollTitle');
+      const bannerDesc = document.getElementById('currentRollDesc');
+      const batchBtn = document.getElementById('batchPrintBtn');
+
+      if (activeTab === 'OUTER_BOX') {
+        const count = (queueData.outer_boxes || []).length;
+        bannerTitle.innerText = "📦 OUTER BOXES (PRINT 2X)";
+        bannerDesc.innerText = `${count} outer box orders ready. Each order auto-prints 2 copies (front & back).`;
+        batchBtn.innerText = `Print All Outer Boxes (${count * 2} Labels)`;
+      } else {
+        const color = activeTab === 'ALL' ? 'BLACK' : activeTab;
+        const jobs = queueData.queues[color] || [];
+        const totalQty = jobs.reduce((acc, j) => acc + (j.status === 'PENDING' ? j.quantity : 0), 0);
+        
+        bannerTitle.innerText = `⚫ ACTIVE ROLL: ${color}`;
+        bannerDesc.innerText = `${totalQty} ${color} labels queued for Argox thermal transfer roll.`;
+        batchBtn.innerText = `Print ${color} Batch (${totalQty} Labels)`;
+      }
+    }
+
+    function renderItems() {
+      const grid = document.getElementById('labelsGrid');
+      grid.innerHTML = '';
+
+      if (activeTab === 'OUTER_BOX') {
+        const boxes = queueData.outer_boxes || [];
+        if (boxes.length === 0) {
+          grid.innerHTML = '<p style="color: #666;">No outer box orders queued.</p>';
+          return;
+        }
+        boxes.forEach((box, idx) => {
+          const card = document.createElement('div');
+          card.className = 'outer-box-card';
+          card.innerHTML = `
+            <div class="box-header">
+              <span class="box-title">BOX ${box.current_box} OF ${box.total_boxes}</span>
+              <span style="font-weight: bold; color: #a3e635;">WEIGHT: ${box.weight_kg} KG</span>
+            </div>
+            <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px;">Quote: <strong>${box.quote_number}</strong></div>
+            <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; margin-bottom: 12px;">
+              ${box.box_contents.map(c => `
+                <div class="box-item-row">
+                  <span><strong>${c.quantity}x</strong> ${c.unit_type}</span>
+                  <span style="color: #cbd5e1;">${c.model}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+              <button class="btn-print-single" onclick="printOuterBox(${idx})">Print 2x Copies (Front & Back)</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+        return;
+      }
+
+      // Cartridge labels
+      let items = [];
+      if (activeTab === 'ALL') {
+        Object.values(queueData.queues).forEach(q => items.push(...q));
+      } else {
+        items = queueData.queues[activeTab] || [];
+      }
+
+      const pending = items.filter(j => j.status === 'PENDING');
+      if (pending.length === 0) {
+        grid.innerHTML = `<p style="color: #666;">No pending labels in ${activeTab}.</p>`;
+        return;
+      }
+
+      pending.forEach(job => {
+        const card = document.createElement('div');
+        card.className = 'label-card';
+        card.innerHTML = `
+          <div class="label-header">
+            <span>Quote: ${job.quote_number}</span>
+            <span style="color: var(--accent); font-weight: bold;">${job.color_group}</span>
+          </div>
+          <div class="label-preview-box">
+            <div>
+              <div class="label-title">${job.item_name}</div>
+              <div class="label-desc">${job.description || ''}</div>
+              ${job.handwritten_note ? `<div class="label-note">📝 ${job.handwritten_note}</div>` : ''}
+            </div>
+            <div class="label-barcode-mock"></div>
+          </div>
+          <div class="label-controls">
+            <div class="qty-stepper">
+              <button class="qty-btn" onclick="adjustQty('${job.id}', -1)">-</button>
+              <input class="qty-input" id="qty-${job.id}" type="text" value="${job.quantity}">
+              <button class="qty-btn" onclick="adjustQty('${job.id}', 1)">+</button>
+            </div>
+            <button class="btn-print-single" onclick="printSingleJob('${job.id}')">Print (${job.quantity})</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function updateUI() {
+      // Update badges
+      let totalAll = 0;
+      ['BLACK', 'CYAN', 'MAGENTA', 'YELLOW'].forEach(c => {
+        const q = queueData.queues[c] || [];
+        const count = q.reduce((acc, j) => acc + (j.status === 'PENDING' ? j.quantity : 0), 0);
+        totalAll += count;
+        document.getElementById(`badge${c.charAt(0) + c.slice(1).toLowerCase()}`).innerText = count;
+      });
+      document.getElementById('badgeAll').innerText = totalAll;
+      document.getElementById('badgeBox').innerText = (queueData.outer_boxes || []).length;
+
+      renderItems();
+      updateBanner();
+    }
+
+    async function printActiveColorBatch() {
+      if (activeTab === 'OUTER_BOX') {
+        await fetch('/api/print/all_outer_boxes', { method: 'POST' });
+      } else {
+        const color = activeTab === 'ALL' ? 'BLACK' : activeTab;
+        await fetch(`/api/print/color?color=${color}`, { method: 'POST' });
+      }
+      loadData();
+    }
+
+    async function printSingleJob(jobId) {
+      const qtyInput = document.getElementById(`qty-${jobId}`);
+      const qty = parseInt(qtyInput.value) || 1;
+      await fetch('/api/print/job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: jobId, quantity: qty })
+      });
+      loadData();
+    }
+
+    async function printOuterBox(index) {
+      await fetch('/api/print/outer_box', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index: index })
+      });
+      loadData();
+    }
+
+    function adjustQty(jobId, delta) {
+      const input = document.getElementById(`qty-${jobId}`);
+      let val = parseInt(input.value) || 1;
+      val = Math.max(1, val + delta);
+      input.value = val;
+    }
+
+    setInterval(loadData, 3000);
+    window.onload = loadData;
+  </script>
+</body>
+</html>

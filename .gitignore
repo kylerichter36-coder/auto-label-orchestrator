@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs and runtime databases
+*.log
+*.sqlite3
+/run/*.sock
+
+# Sensitive and temporary scan files
+*.pdf
+tmp/
+scratch/
+
+# OS-specific
+.DS_Store
+Thumbs.db
