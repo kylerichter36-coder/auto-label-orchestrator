@@ -25,7 +25,7 @@ In high-volume printer cartridge manufacturing, refilling, and distribution faci
 
 Typing 30+ outer box labels and dozens of cartridge stickers by hand is the **single biggest operational bottleneck** on the factory floor, causing delays, typos, and costly label waste.
 
-**Auto-Label Orchestrator** automates this end-to-end on **any Linux machine** (Orange Pi, Raspberry Pi, Intel/AMD Mini PC, thin client, or old laptop):
+**Auto-Label Orchestrator** automates this end-to-end on **any Linux host** (Orange Pi, Raspberry Pi, Intel/AMD Mini PC, thin client, or spare workstation):
 1. **1-Touch Scan**: The operator loads a quote sheet or packing slip into the document feeder of any network scanner and taps a single touchscreen shortcut.
 2. **Direct Isolated Transmission**: The scanner pushes the PDF directly over an air-gapped Ethernet cable to a local SMTP daemon on the Linux host.
 3. **Confidential In-Memory AI Extraction**: The Linux host holds the document strictly in volatile RAM, queries a free-tier **Google Gemini Flash** key pool to extract marked items and handwriting, and immediately executes a **Zero-Shred protocol** (`0x00` wipe + garbage collection) to ensure confidential customer data is never written to disk.
@@ -36,14 +36,21 @@ Typing 30+ outer box labels and dozens of cartridge stickers by hand is the **si
 ## Universal Host Compatibility: Any Linux PC (ARM or x86/x64)
 
 > [!IMPORTANT]
+> **Host Agnostic Architecture (Why the Orange Pi?)**:
+> While this reference setup runs on an **Orange Pi PC (Allwinner H3, 1GB DDR3 RAM)**, the system is designed to run on **any machine that can boot Linux**.
+> 
+> The Orange Pi PC was chosen specifically because:
+> 1. **Available Hardware**: It was the hardware on hand.
+> 2. **Lowest Compute Benchmark**: The Orange Pi PC represents the absolute lowest tier of viable computing power (a \$20 board with a 32-bit Quad-Core ARM CPU and only 1GB of RAM). Proving that this entire pipeline runs flawlessly with minimal RAM footprint (<150MB) and near-instant response proves that **it will run effortlessly on anything**.
+>
 > **Single Universal Codebase (Zero Architecture Lock-in)**:
-> You do **not** need separate versions for ARM and x86/x64. The exact same repository and code run identically on:
+> You do **not** need separate versions or branches for ARM and x86/x64. The exact same repository and code run identically on:
 > * **ARM Single Board Computers**: Orange Pi (PC, Zero, 3, 5), Raspberry Pi (3, 4, 5, Zero 2W).
 > * **x86 / x64 Mini PCs & Thin Clients**: Intel NUC, Beelink, HP EliteDesk Mini, Lenovo ThinkCentre Tiny, Dell OptiPlex Micro, or standard Linux desktops.
 >
 > **Why is it 100% cross-platform?**
-> 1. **Pure Python**: The software is written entirely in cross-platform Python 3 without proprietary compiled binary blobs.
-> 2. **Standard Linux Kernel USB (`/dev/usb/lp0`)**: The native Linux kernel USB printer driver (`usblp`) is identical across all CPU architectures. PPLB raw commands stream directly over USB whether running on a 32-bit ARM chip or an Intel Core processor.
+> 1. **Pure Python 3**: Written entirely in cross-platform Python without compiled binary blobs.
+> 2. **Standard Linux Kernel USB (`/dev/usb/lp0`)**: The native Linux kernel USB printer driver (`usblp`) is built into all Linux kernels identically across all CPU architectures. PPLB raw commands stream directly over USB whether running on a 32-bit ARM chip or an Intel Core i7.
 > 3. **Native TCP/IP Networking**: Standard socket protocols handle the scanner email stream identically on any host.
 
 ---
@@ -51,9 +58,15 @@ Typing 30+ outer box labels and dozens of cartridge stickers by hand is the **si
 ## Universal Scanner Compatibility
 
 > [!TIP]
-> **Scanner Agnostic**: While our reference build and testing bench utilize the **Lexmark MX511** (chosen for its widespread commercial availability, rock-solid automatic document feeder, and affordable secondary market pricing), **this system is completely universal**.
+> **Scanner Agnostic (Why the Lexmark MX511?)**:
+> While our reference build and testing bench utilize the **Lexmark MX511**, **this system is completely universal**.
 >
-> Any desktop, multifunction, or commercial scanner capable of **Scan-to-Email (SMTP)** or **Network Folder (SMB/FTP)** push (such as Canon, HP, Brother, Xerox, Ricoh, Epson, or Kyocera) works out of the box with zero code changes. Simply point your scanner's primary SMTP gateway to the host's IP address on port `2525`.
+> The Lexmark MX511 was selected for our workshop bench simply because:
+> 1. It is extremely easy to source at very low cost on the commercial secondary market.
+> 2. It features a fast, heavy-duty duplex Automatic Document Feeder (ADF).
+> 3. It includes an easily accessible embedded web configuration server.
+>
+> **Any desktop, multifunction, or commercial scanner** capable of **Scan-to-Email (SMTP)** or **Network Folder (SMB/FTP)** push (such as Canon, HP, Brother, Xerox, Ricoh, Epson, or Kyocera) works out of the box with zero code changes. Simply point your scanner's primary SMTP gateway to the host's IP address on port `2525`.
 
 ---
 
