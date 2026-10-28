@@ -91,7 +91,7 @@
       <h1 class="title">Auto-Label Orchestrator</h1>
     </div>
     <div class="status-group">
-      <div class="status-pill"><span class="dot"></span> Lexmark: 192.168.50.2</div>
+      <div class="status-pill"><span class="dot"></span> Scanner: Direct LAN (192.168.50.2)</div>
       <div class="status-pill"><span class="dot"></span> Argox OS-214: USB Ready</div>
       <div class="status-pill"><span class="dot"></span> Gemini Free Pool: Active</div>
     </div>
@@ -99,17 +99,17 @@
 
   <!-- Warning Banner for Ambiguous Handwriting -->
   <div id="alertBanner" class="alert-banner">
-    <h4>⚠️ Verification Needed: Hand-Written Ambiguity</h4>
+    <h4>Verification Needed: Hand-Written Ambiguity</h4>
     <p id="alertReason">Quote QT-90124 line 2 has ambiguous handwritten quantity.</p>
     <div style="margin-top: 10px;">
-      <button class="btn-print-single" onclick="approvePending()">Approve & Enqueue</button>
+      <button class="btn-print-single" onclick="approvePending()">Approve and Enqueue</button>
     </div>
   </div>
 
   <!-- Smart Roll Action Banner -->
   <div class="roll-banner">
     <div class="roll-info">
-      <h3 id="currentRollTitle">⚫ ACTIVE ROLL: BLACK</h3>
+      <h3 id="currentRollTitle">Active Roll: Black</h3>
       <p id="currentRollDesc">30 Black labels ready to print. Continuous batch run queued.</p>
     </div>
     <div>
@@ -120,11 +120,11 @@
   <!-- Filter Tabs -->
   <div class="tabs-nav">
     <button class="tab-btn active" onclick="switchTab('ALL')">All <span class="badge" id="badgeAll">0</span></button>
-    <button class="tab-btn" onclick="switchTab('BLACK')">⚫ Black <span class="badge badge-black" id="badgeBlack">0</span></button>
-    <button class="tab-btn" onclick="switchTab('CYAN')">🔵 Cyan <span class="badge badge-cyan" id="badgeCyan">0</span></button>
-    <button class="tab-btn" onclick="switchTab('MAGENTA')">🔴 Magenta <span class="badge badge-magenta" id="badgeMagenta">0</span></button>
-    <button class="tab-btn" onclick="switchTab('YELLOW')">🟡 Yellow <span class="badge badge-yellow" id="badgeYellow">0</span></button>
-    <button class="tab-btn" onclick="switchTab('OUTER_BOX')">📦 Outer Boxes <span class="badge" id="badgeBox">0</span></button>
+    <button class="tab-btn" onclick="switchTab('BLACK')">Black <span class="badge badge-black" id="badgeBlack">0</span></button>
+    <button class="tab-btn" onclick="switchTab('CYAN')">Cyan <span class="badge badge-cyan" id="badgeCyan">0</span></button>
+    <button class="tab-btn" onclick="switchTab('MAGENTA')">Magenta <span class="badge badge-magenta" id="badgeMagenta">0</span></button>
+    <button class="tab-btn" onclick="switchTab('YELLOW')">Yellow <span class="badge badge-yellow" id="badgeYellow">0</span></button>
+    <button class="tab-btn" onclick="switchTab('OUTER_BOX')">Outer Boxes <span class="badge" id="badgeBox">0</span></button>
   </div>
 
   <!-- Label Grid Area -->
@@ -164,15 +164,15 @@
 
       if (activeTab === 'OUTER_BOX') {
         const count = (queueData.outer_boxes || []).length;
-        bannerTitle.innerText = "📦 OUTER BOXES (PRINT 2X)";
-        bannerDesc.innerText = `${count} outer box orders ready. Each order auto-prints 2 copies (front & back).`;
+        bannerTitle.innerText = "Outer Boxes (Print 2x)";
+        bannerDesc.innerText = `${count} outer box orders ready. Each order auto-prints 2 copies (front and back).`;
         batchBtn.innerText = `Print All Outer Boxes (${count * 2} Labels)`;
       } else {
         const color = activeTab === 'ALL' ? 'BLACK' : activeTab;
         const jobs = queueData.queues[color] || [];
         const totalQty = jobs.reduce((acc, j) => acc + (j.status === 'PENDING' ? j.quantity : 0), 0);
         
-        bannerTitle.innerText = `⚫ ACTIVE ROLL: ${color}`;
+        bannerTitle.innerText = `Active Roll: ${color}`;
         bannerDesc.innerText = `${totalQty} ${color} labels queued for Argox thermal transfer roll.`;
         batchBtn.innerText = `Print ${color} Batch (${totalQty} Labels)`;
       }
@@ -206,7 +206,7 @@
               `).join('')}
             </div>
             <div style="display: flex; justify-content: flex-end;">
-              <button class="btn-print-single" onclick="printOuterBox(${idx})">Print 2x Copies (Front & Back)</button>
+              <button class="btn-print-single" onclick="printOuterBox(${idx})">Print 2x Copies (Front and Back)</button>
             </div>
           `;
           grid.appendChild(card);
@@ -240,7 +240,7 @@
             <div>
               <div class="label-title">${job.item_name}</div>
               <div class="label-desc">${job.description || ''}</div>
-              ${job.handwritten_note ? `<div class="label-note">📝 ${job.handwritten_note}</div>` : ''}
+              ${job.handwritten_note ? `<div class="label-note">Note: ${job.handwritten_note}</div>` : ''}
             </div>
             <div class="label-barcode-mock"></div>
           </div>

@@ -1,4 +1,4 @@
-# Auto-Label Orchestrator 🏷️⚡
+# Auto-Label Orchestrator 
 
 > **Edge AI Multi-Workflow Thermal Label Printing Station**  
 > *Transforming Scanned Paper Invoices & Pick-and-Pack Sheets into Instant Continuous Argox PPLB Print Runs via Orange Pi & Gemini Flash Vision.*
@@ -12,14 +12,14 @@
 
 ---
 
-## 📌 Project Status: Work In Progress (WIP)
+## Project Status: Work In Progress (WIP)
 
 > [!NOTE]
 > **Current Milestone**: Software Core, In-Memory SMTP Receiver, Gemini Key Pool Manager, PPLB Generator, and Web Dashboard are **100% built and validated** against the virtual simulation test bench. Live bench testing with the physical scanner and Argox OS-214 printer is scheduled for the upcoming workshop testing session.
 
 ---
 
-## 📖 Executive Summary & Problem Solved
+## Executive Summary & Problem Solved
 
 In high-volume printer cartridge manufacturing, refilling, and distribution facilities, workshop operators process dozens of paper orders daily. Staff must manually examine handwritten notes on printed quotes, identify requested cartridges, decipher messy handwriting, and manually re-enter order details into desktop BarTender software to print individual cartridge and outer carton labels.
 
@@ -33,7 +33,7 @@ Typing 30+ outer box labels and dozens of cartridge stickers by hand is the **si
 
 ---
 
-## 🌐 Universal Scanner Compatibility
+## Universal Scanner Compatibility
 
 > [!TIP]
 > **Scanner Agnostic**: While our reference build and testing bench utilize the **Lexmark MX511** (chosen for its widespread commercial availability, rock-solid automatic document feeder, and affordable secondary market pricing), **this system is completely universal**.
@@ -42,7 +42,7 @@ Typing 30+ outer box labels and dozens of cartridge stickers by hand is the **si
 
 ---
 
-## 🚀 Key Software Capabilities
+## Key Software Capabilities
 
 * **Dual-Workflow Automatic Classifier**:
   * **Workflow A (Quotation / Tax Invoice $\rightarrow$ Cartridge Labels)**: Identifies printed table rows marked with a handwritten circle, tick, or 'X' $\rightarrow$ extracts row quantity (e.g. 10, 30, 100) $\rightarrow$ handles cross-brand cartridge annotations (e.g. `CB540A` marked as `Canon 716 Black` or `HCF` notes) $\rightarrow$ matches pre-made `.prn` templates on the SD card $\rightarrow$ rewrites print count to `P<Qty>` for continuous batch printing.
@@ -53,7 +53,7 @@ Typing 30+ outer box labels and dozens of cartridge stickers by hand is the **si
 
 ---
 
-## 🏗️ Hardware Architecture & Wiring Topology
+## Hardware Architecture & Wiring Topology
 
 ```mermaid
 graph TD
@@ -98,7 +98,7 @@ graph TD
 
 ---
 
-## 🗂️ Project Directory Structure
+## Project Directory Structure
 
 ```text
 auto_label_orchestrator/
@@ -140,7 +140,7 @@ auto_label_orchestrator/
 
 ---
 
-## ⚙️ Installation & Deployment
+## Installation & Deployment
 
 ### 1. Preparing the 8GB MicroSD Card
 Flash **Armbian Minimal (Headless CLI, Debian/Ubuntu base)** onto the 8GB MicroSD card using BalenaEtcher or Raspberry Pi Imager.
@@ -168,7 +168,7 @@ SIMULATION_MODE=false
 
 ---
 
-## 🖨️ Reference Scanner Configuration (Lexmark MX511)
+## Reference Scanner Configuration (Lexmark MX511)
 
 1. Plug the Ethernet cable directly from the scanner to the Orange Pi.
 2. The Orange Pi automatically assigns IP `192.168.50.2` to the scanner.
@@ -189,7 +189,7 @@ SIMULATION_MODE=false
 
 ---
 
-## 🧪 Virtual Test Bench (Testing Without Hardware)
+## Virtual Test Bench (Testing Without Hardware)
 
 You can run and test the complete system on any laptop today before connecting physical hardware:
 
@@ -209,7 +209,7 @@ python simulator/mock_lexmark.py
 
 ---
 
-## 📅 Roadmap & TODOs
+## Roadmap & TODOs
 
 ### Phase 1: Software Foundation & Simulation [COMPLETED]
 - [x] In-memory local SMTP server with RFC 5322 MIME extraction.
@@ -238,6 +238,6 @@ python simulator/mock_lexmark.py
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the [MIT License](LICENSE).
