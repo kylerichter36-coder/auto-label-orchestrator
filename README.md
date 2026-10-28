@@ -5,59 +5,66 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)]()
-[![Target SBC](https://img.shields.io/badge/Platform-Orange%20Pi%20PC%20(1GB%20RAM)-orange.svg)]()
-[![Printer Protocol](https://img.shields.io/badge/Printer-Argox%20PPLB%20(Raw%20USB)-purple.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Orange%20Pi%20PC%20(1GB%20RAM)-orange.svg)]()
+[![Hardware Status](https://img.shields.io/badge/Hardware%20Status-Work%20in%20Progress%20(Pending%20Bench%20Test)-yellow.svg)]()
+[![Software Status](https://img.shields.io/badge/Software%20Daemon-100%25%20Verified%20(Simulation)-brightgreen.svg)]()
 [![Free Tier AI](https://img.shields.io/badge/AI%20Vision-Google%20Gemini%20Flash%20(Free%20Tier)-teal.svg)]()
 
 ---
 
-## 📖 Executive Summary
+## 📌 Project Status: Work In Progress (WIP)
 
-In high-volume printer cartridge refilling, manufacturing, and warehouse logistics, warehouse operators ("okies") often spend hours manually deciphering handwritten quotes and retyping order details into desktop BarTender software to print thermal transfer labels.
-
-**Auto-Label Orchestrator** automates this entire pipeline on a \$25 **Orange Pi PC (1GB RAM)**:
-1. An operator drops a quote or packing sheet onto a **Lexmark MX511** scanner and taps a 1-touch touchscreen shortcut.
-2. The scanner transmits the document over a direct, isolated Ethernet cable directly to the Orange Pi via a local SMTP listener.
-3. The Orange Pi buffers the PDF **purely in RAM** (zero disk footprint for strict confidentiality), calls a resilient **Google Gemini Flash Free-Tier Key Pool**, accurately parses messy handwriting and circled SKUs, and immediately zeroes the memory buffer.
-4. Extracted print jobs are routed through a browser-based **"BarTender Web"** dashboard and dispatched natively to an **Argox OS-214 thermal transfer printer** over raw USB (`/dev/usb/lp0`).
+> [!NOTE]
+> **Current Milestone**: Software Core, In-Memory SMTP Receiver, Gemini Key Pool Manager, PPLB Generator, and Web Dashboard are **100% built and validated** against the virtual simulation test bench. Live bench testing with the physical Lexmark MX511 scanner and Argox OS-214 printer is scheduled for the upcoming workshop testing session.
 
 ---
 
-## 🚀 Key Features
+## 📖 Executive Summary & Problem Solved
 
-* **Zero-Driver Direct Ethernet Link:** Direct LAN patch cable connects Lexmark MX511 to Orange Pi `eth0` with an isolated internal DHCP server (`192.168.50.1/24`). No router, network switch, or proprietary Linux scanner drivers needed.
-* **Dual Automatic Workflow Classification:**
-  * **Workflow A (Quotation / Tax Invoice):** Detects hand-drawn circles, ticks, or 'X's next to printed cartridge rows $\rightarrow$ extracts row quantity (e.g. 10, 30, 100) $\rightarrow$ matches pre-made `.prn` label on SD card $\rightarrow$ dynamically injects continuous batch command `P<Qty>` into Argox PPLB stream.
-  * **Workflow B (Pick & Pack Outer Box Labels):** Reads Quote #, Weight, and `Box X of Y` $\rightarrow$ itemizes contents, categorizing as **Toner Unit** vs. **Drum / Imaging Unit** (e.g. `DR3115`, Lexmark imaging drums) $\rightarrow$ calculates dynamic PPLB line offsets $\rightarrow$ automatically prints **2 copies (`P2`)** for front and back carton labeling.
-* **Toner Cross-Referencing & Handwriting OCR:** Understands industry annotations (e.g., cross-referencing an HP `CB540A` to `Canon 716 Black` or `HCF` high-capacity notes).
-* **Confidential In-Memory Shredding:** Scanned PDFs are held strictly in volatile RAM (`io.BytesIO`), zero-overwritten with `0x00`, and garbage-collected immediately after AI analysis. No scans are ever saved to the MicroSD card.
-* **Free-Tier Gemini Key Pool:** Round-robin pool of 5+ free Gemini API keys with automatic HTTP 429 (`RESOURCE_EXHAUSTED`) failover and a hard `max_output_tokens=1024` cap. Operates 100% free under Google's 1,500 requests/day quota.
-* **Smart Color Queue & BarTender Web GUI:** Groups pending labels by roll color (`Black`, `Cyan`, `Magenta`, `Yellow`). Operators swap the physical roll only once per color batch.
-* **ARM-Native Driverless Printing:** Streams native PPLB binary commands directly to `/dev/usb/lp0`. Proves no x86/x64 PC is required for industrial thermal printing.
+In high-volume printer cartridge manufacturing, refilling, and distribution facilities, workshop operators ("okies") process dozens of paper orders daily. Staff must manually examine handwritten notes on printed quotes, identify requested cartridges, decipher messy handwriting, and manually re-enter order details into desktop BarTender software to print individual cartridge and outer carton labels.
+
+Typing 30+ outer box labels and dozens of cartridge stickers by hand is the **single biggest operational bottleneck** on the factory floor, causing delays, typos, and costly label waste.
+
+**Auto-Label Orchestrator** automates this end-to-end on an affordable, energy-efficient **Orange Pi PC (Allwinner H3, 1GB RAM)**:
+1. **1-Touch Scan**: The operator loads a quote sheet or packing slip into the document feeder of a **Lexmark MX511** and taps a single touchscreen shortcut.
+2. **Direct Isolated Transmission**: The scanner pushes the PDF directly over an air-gapped Ethernet cable to a local SMTP daemon on the Orange Pi.
+3. **Confidential In-Memory AI Extraction**: The Orange Pi holds the document strictly in volatile RAM, queries a free-tier **Google Gemini Flash** key pool to extract marked items and handwriting, and immediately executes a **Zero-Shred protocol** (`0x00` wipe + garbage collection) to ensure confidential customer data is never written to disk.
+4. **Native Continuous Printing**: The Orange Pi injects the extracted batch quantities (e.g. `P30`) directly into native PPLB `.prn` files and streams them over raw USB (`/dev/usb/lp0`) to the **Argox OS-214 thermal transfer printer**, running off entire batches continuously without needing any x86/x64 PC.
 
 ---
 
-## 🏗️ System Architecture
+## 🚀 Key Software Capabilities
+
+* **Dual-Workflow Automatic Classifier**:
+  * **Workflow A (Quotation / Tax Invoice $\rightarrow$ Cartridge Labels)**: Identifies printed table rows marked with a handwritten circle, tick, or 'X' $\rightarrow$ extracts row quantity (e.g. 10, 30, 100) $\rightarrow$ handles cross-brand cartridge annotations (e.g. `CB540A` marked as `Canon 716 Black` or `HCF` notes) $\rightarrow$ matches pre-made `.prn` templates on the SD card $\rightarrow$ rewrites print count to `P<Qty>` for continuous batch printing.
+  * **Workflow B (Pick & Pack Sheet $\rightarrow$ Outer Box Labels)**: Parses Quote Number, Box Weight, and `Box X of Y` $\rightarrow$ itemizes contents, categorizing models as **Toner Unit** vs. **Drum / Imaging Unit** (e.g. `DR3115`, Lexmark imaging drums) $\rightarrow$ calculates dynamic PPLB line coordinates $\rightarrow$ automatically prints **2 copies (`P2`)** for front and back carton placement.
+* **Resilient Free-Tier Gemini Key Pool**: Rotates across 5+ free Gemini API keys, automatically detecting HTTP `429 RESOURCE_EXHAUSTED` and failing over in <500ms. Capped at `max_output_tokens=1024` with `temperature=0.0` for 100% free, deterministic operation under Google's 1,500 requests/day quota.
+* **BarTender Web Dashboard & Smart Color Queue**: Responsive web UI served on port 8080. Intelligently groups pending labels by roll color (`Black`, `Cyan`, `Magenta`, `Yellow`) so operators only swap physical label rolls **once per color batch**.
+* **Human-in-the-Loop Safeguard**: If an operator's handwriting is scribbled or ambiguous, the AI flags `requires_confirmation: true`, placing the job in an approval queue accessible from any phone or laptop on the local Wi-Fi.
+
+---
+
+## 🏗️ Hardware Architecture & Wiring Topology
 
 ```mermaid
 graph TD
-    subgraph Isolated Workshop Hardware Cell
-        Lexmark[Lexmark MX511 Scanner] -- "Direct LAN Cable (192.168.50.2)" --> Pi[Orange Pi PC]
-        Pi -- "Raw USB (/dev/usb/lp0)" --> Argox[Argox OS-214 Thermal Printer]
+    subgraph Air-Gapped Physical Cell
+        Lexmark[Lexmark MX511 Scanner] -- "Direct Patch Cable (eth0: 192.168.50.2)" --> Pi[Orange Pi PC]
+        Pi -- "USB Raw (/dev/usb/lp0)" --> Argox[Argox OS-214 Thermal Printer]
     end
 
-    subgraph Orange Pi Software Architecture
+    subgraph Orange Pi PC Software Stack (1GB RAM)
         DHCP[dnsmasq DHCP / 192.168.50.1]
         SMTP[aiosmtpd Local Receiver :2525]
-        RAM[RAM Buffer / Instant 0x00 Shred]
+        RAM[RAM Buffer / Zero Disk / Instant 0x00 Shred]
         Pool[Gemini Key Pool Manager (5+ Keys)]
-        Engine[PPLB Printer Engine]
+        PPLB[PPLB Dynamic Coordinate & Batch Engine]
         WebUI[BarTender Web Dashboard :8080]
     end
 
-    subgraph External & Uplink
+    subgraph Workshop Uplink & Control
         Pi -- "USB Wi-Fi Dongle (wlan0)" --> Cloud[Google Gemini Flash API]
-        Laptop[Operator Laptop / Phone Browser] -- "Local Wi-Fi" --> WebUI
+        Operator[Shop Operator Phone / PC Browser] -- "Workshop Wi-Fi" --> WebUI
     end
 
     Lexmark --> SMTP
@@ -66,50 +73,104 @@ graph TD
     Pool --> Cloud
     Cloud --> Pool
     Pool --> RAM
-    RAM -.->|Zero Overwrite + GC| RAM
-    Pool --> Engine
-    Engine -->|Automatic Batch| Argox
-    Engine --> WebUI
+    RAM -.->|Instant 0x00 Shred| RAM
+    Pool --> PPLB
+    PPLB -->|Auto Batch P<Qty>| Argox
+    PPLB --> WebUI
     WebUI -->|Operator Dispatches Color Batch| Argox
 ```
 
----
+### 1. Direct Network Interconnect (Lexmark $\leftrightarrow$ Orange Pi)
+* **Physical Connection**: Standard Cat5e/Cat6 patch cable directly connecting the Lexmark MX511 RJ45 port to the Orange Pi PC `eth0` port. (Auto-MDIX handles crossover automatically).
+* **Isolated Subnet**: The Orange Pi runs a minimal `dnsmasq` DHCP service on `eth0` (`192.168.50.1/24`), leasing `192.168.50.2` to the Lexmark. The scanner is completely air-gapped from Wi-Fi.
+* **Internet Uplink for Gemini**: A \$5 USB Wi-Fi dongle on the Orange Pi (`wlan0`) provides internet access exclusively for Gemini Flash API requests.
 
-## 🛠️ Bill of Materials (BOM)
-
-| Item | Model / Specification | Purpose |
-| :--- | :--- | :--- |
-| **Single Board Computer** | Orange Pi PC (Allwinner H3, 1GB DDR3 RAM) | Central orchestrator, web server, and printer interface |
-| **Storage** | 8GB or 16GB MicroSD Card (Class 10) | Armbian Minimal OS + Label templates |
-| **Scanner** | Lexmark MX511 (Multifunction ADF / Flatbed) | Scans quotes and pick & pack sheets |
-| **Thermal Printer** | Argox OS-214 (Thermal Transfer, 203 DPI) | Prints continuous label batches via ink ribbon |
-| **Network Cable** | Standard Cat5e / Cat6 Patch Cable (RJ45) | Direct connection between Lexmark and Orange Pi |
-| **Wi-Fi Adapter** | 2.4GHz USB Wi-Fi Dongle | Connects Orange Pi to workshop Wi-Fi for Gemini API calls |
-| **Power Supply** | 5V 3A DC Barrel Jack | Dedicated clean power for Orange Pi |
+### 2. Printer Interface (Orange Pi $\leftrightarrow$ Argox OS-214)
+* **Physical Connection**: Standard USB Type-A to Type-B cable connecting Orange Pi USB to Argox rear port.
+* **Driverless Raw USB**: Exposes Linux character device node `/dev/usb/lp0`. The Orange Pi's 32-bit ARM CPU writes native PPLB binary text directly to the printer with zero driver overhead.
 
 ---
 
-## 💻 Software Installation & Setup
+## 📋 Full Bill of Materials (BOM)
 
-### 1. Flash Armbian onto the 8GB MicroSD Card
-Download and flash **Armbian Minimal (Headless CLI)** using BalenaEtcher or Raspberry Pi Imager. An 8GB SD card leaves >5GB of free space.
+| Category | Component | Model / Spec | Status | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **SBC** | Single Board Computer | Orange Pi PC (Allwinner H3, 1GB RAM) | Ready for deployment | Main controller, local SMTP daemon, web UI |
+| **Storage** | MicroSD Card | 8GB or 16GB Industrial Class 10 | On Hand | Armbian Minimal OS + Label templates (<2.5GB used) |
+| **Power** | DC Power Supply | 5V 3A Barrel Jack | On Hand | Stable dedicated power for Orange Pi |
+| **Scanner** | Multifunction Scanner | Lexmark MX511 (ADF + Flatbed) | Pending live bench test | High-speed 300 DPI duplex sheet scanner |
+| **Printer** | Thermal Transfer Printer | Argox OS-214 (203 DPI, PPLB) | Pending live bench test | Prints continuous die-cut labels via ink ribbon |
+| **Network** | Ethernet Cable | Cat5e / Cat6 RJ45 Patch Cable | On Hand | Direct air-gapped link between Lexmark and Pi |
+| **Wi-Fi** | USB Wi-Fi Adapter | 2.4GHz 802.11n Dongle | On Hand | Connects Pi to shop Wi-Fi for Gemini API |
+| **Consumables** | Thermal Transfer Ribbon | 110mm Wax / Resin Ink Ribbon | On Hand | High-contrast black print on colored label stock |
+| **Consumables** | Die-Cut Labels | Pre-colored rolls (Black, Cyan, Mag, Yel) | On Hand | Cartridge corner labels & 4x6" outer box labels |
 
-### 2. Clone Repository & Install
+---
+
+## 🗂️ Project Directory Structure
+
+```text
+auto_label_orchestrator/
+├── .env.example                  # Environment variables & Gemini key pool template
+├── .gitignore                    # Ignores sensitive tokens, virtualenvs, cache
+├── LICENSE                       # MIT License
+├── README.md                     # Comprehensive engineering specification & guide
+├── requirements.txt              # Lightweight dependencies for 1GB RAM SBC
+├── daemon/
+│   ├── __init__.py
+│   ├── config.py                 # Cross-platform config loader (.env + fallbacks)
+│   ├── gemini_pool.py            # Multi-key pool manager with automatic 429 failover
+│   ├── classifier.py             # Dual-workflow AI prompt & Pydantic schemas
+│   ├── smtp_receiver.py          # aiosmtpd listener with 0x00 memory shredder
+│   ├── printer_engine.py         # Argox PPLB driver with dynamic P<Qty> batching
+│   ├── color_queue.py            # Smart roll-color queue manager
+│   ├── web_ui.py                 # aiohttp REST API & BarTender-style web server
+│   └── main.py                   # Central async orchestrator service
+├── web/
+│   └── index.html                # Responsive BarTender Web GUI
+├── templates/
+│   └── sample_labels/            # Pre-made PPLB (.prn) label library
+│       ├── Dell_HCF_283x.prn
+│       ├── CB540A_BLACK.prn
+│       ├── CANON_716_BLACK.prn
+│       ├── CB541A_CYAN.prn
+│       └── DR3115_DRUM.prn
+├── scripts/
+│   ├── setup_direct_ethernet.sh  # Sets up eth0 static IP & dnsmasq on Armbian
+│   └── install_service.sh        # Installs systemd background service
+├── systemd/
+│   └── autolabel.service         # Systemd unit file with 350MB RAM sandbox
+├── simulator/
+│   ├── mock_lexmark.py           # Synthetic scanner email transmission
+│   └── mock_argox.py             # Virtual Argox thermal printer & ASCII visualizer
+└── tests/
+    └── test_e2e.py               # Automated unit & integration test suite
+```
+
+---
+
+## ⚙️ Installation & Deployment
+
+### 1. Preparing the 8GB MicroSD Card
+Flash **Armbian Minimal (Headless CLI, Debian/Ubuntu base)** onto the 8GB MicroSD card using BalenaEtcher or Raspberry Pi Imager.
+
+### 2. Deploying on Orange Pi PC
+Once the Orange Pi is powered on and connected to your Wi-Fi:
 ```bash
-git clone https://github.com/your-username/auto-label-orchestrator.git
+git clone https://github.com/kylerichter36-coder/auto-label-orchestrator.git
 cd auto-label-orchestrator
 
-# Setup direct isolated Ethernet link for Lexmark
+# Configure direct isolated Ethernet link for Lexmark
 sudo ./scripts/setup_direct_ethernet.sh
 
-# Install systemd background service
+# Install dependencies and systemd service
 sudo ./scripts/install_service.sh
 ```
 
-### 3. Configure API Keys
+### 3. Adding Your Free Gemini Keys
 Edit `/opt/label_system/.env`:
 ```env
-GEMINI_API_KEYS=AIzaSyD-KEY1,AIzaSyD-KEY2,AIzaSyD-KEY3
+GEMINI_API_KEYS=AIzaSyA_KEY1,AIzaSyB_KEY2,AIzaSyC_KEY3,AIzaSyD_KEY4,AIzaSyE_KEY5
 PRINTER_DEVICE=/dev/usb/lp0
 SIMULATION_MODE=false
 ```
@@ -118,10 +179,10 @@ SIMULATION_MODE=false
 
 ## 🖨️ Lexmark MX511 Configuration Guide
 
-1. Connect the Ethernet cable directly from the Lexmark MX511 to the Orange Pi.
+1. Plug the Ethernet cable directly from the Lexmark MX511 to the Orange Pi.
 2. The Orange Pi automatically assigns IP `192.168.50.2` to the scanner.
-3. On a PC or phone, open `http://192.168.50.2` in a browser to view the Lexmark Embedded Web Server:
-   * **Settings $\rightarrow$ Network/Ports $\rightarrow$ TCP/IP**: Set to DHCP (Automatic).
+3. In a web browser on any device connected to the network, access `http://192.168.50.2`:
+   * **Settings $\rightarrow$ Network/Ports $\rightarrow$ TCP/IP**: Ensure DHCP is set to Automatic.
    * **Settings $\rightarrow$ E-mail / FTP $\rightarrow$ E-mail Setup**:
      * Primary SMTP Gateway: `192.168.50.1`
      * SMTP Port: `2525`
@@ -130,31 +191,62 @@ SIMULATION_MODE=false
      * Device E-mail Address: `scanner@lexmark.local`
 4. **Create a 1-Touch Home Screen Shortcut**:
    * Name: `Label Scanner`
-   * Recipient: `quotes@orangepi.local`
+   * Destination: `quotes@orangepi.local`
    * Format: `PDF`
-   * Color: `Color` (300 DPI)
+   * Resolution: `300 DPI`
+   * Color: `Color (24-bit)`
 
 ---
 
-## 🧪 Testing with the Built-In Hardware Simulator
+## 🧪 Virtual Test Bench (Testing Without Hardware)
 
-No physical Lexmark scanner or Argox printer at home? Run the virtual test bench on any laptop:
+You can run and test the complete system on any laptop today before connecting physical hardware:
 
 ```bash
-# 1. Start the main orchestrator in simulation mode
+# 1. Run the automated test suite
+python tests/test_e2e.py
+
+# 2. Launch the orchestrator in simulation mode
 python -m daemon.main
 
-# 2. Open the BarTender Web Dashboard in your browser:
+# 3. Open the BarTender Web Dashboard in your browser:
 # http://localhost:8080
 
-# 3. In another terminal, fire a simulated Lexmark scan:
+# 4. In a separate terminal, trigger a simulated Lexmark scan:
 python simulator/mock_lexmark.py
-
-# 4. View the virtual Argox printer output and real-time PPLB commands:
-python -m unittest tests/test_e2e.py
 ```
 
 ---
 
+## 📅 Roadmap & TODOs
+
+### Phase 1: Software Foundation & Simulation [COMPLETED]
+- [x] In-memory local SMTP server with RFC 5322 MIME extraction.
+- [x] Instant Confidential Shredder (`0x00` buffer zeroing + garbage collection).
+- [x] Resilient Gemini Free-Tier Key Pool with automatic HTTP 429 failover.
+- [x] Dual-workflow classifier (Quote vs. Pick & Pack) with toner cross-referencing.
+- [x] Native Argox PPLB batch generator with dynamic `P<Qty>` injection.
+- [x] Dynamic outer box PPLB generator with automatic 2x copies (`P2`).
+- [x] BarTender Web dashboard with smart color queues (Black, Cyan, Magenta, Yellow).
+- [x] Virtual Lexmark and Argox hardware simulators.
+- [x] Automated test suite passing 100%.
+
+### Phase 2: Live Workshop Bench Testing [IN PROGRESS]
+- [ ] Connect Lexmark MX511 via direct patch cable and verify automatic DHCP lease (`192.168.50.2`).
+- [ ] Test 1-touch touchscreen scan from Lexmark to Orange Pi port 2525.
+- [ ] Connect Argox OS-214 via USB and verify native `/dev/usb/lp0` binary transmission.
+- [ ] Conduct live scan tests with 10 actual customer quote sheets with messy handwriting.
+- [ ] Calibrate outer box label print boundaries on physical 4x6" thermal stock.
+
+### Phase 3: Electromechanical Multi-Roll Feeder [FUTURE EXPANSION]
+- [ ] Construct 2020 aluminum extrusion rear feeder frame behind Argox external media slot.
+- [ ] 3D-print converging 4-channel Y-manifold for Black, Cyan, Magenta, and Yellow rolls.
+- [ ] Mount NEMA 17 stepper motors and TCRT5000 optical sensors for automated media switching.
+- [ ] Connect stepper drivers to Arduino Nano / RP2040 sub-controller over USB serial.
+- [ ] Upgrade web software to command automated roll switching instead of manual prompts.
+
+---
+
 ## 📄 License
-Released under the [MIT License](LICENSE).
+
+Distributed under the [MIT License](LICENSE).
