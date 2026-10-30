@@ -1,6 +1,7 @@
 [Unit]
 Description=Auto-Label Orchestrator (Lexmark Scanner to Argox Thermal Printer)
 After=network.target network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
@@ -10,11 +11,13 @@ EnvironmentFile=/opt/label_system/.env
 ExecStart=/usr/bin/python3 -m daemon.main
 Restart=always
 RestartSec=5s
+KillMode=process
 
 # Security and resource sandboxing for 1GB RAM Orange Pi
 MemoryMax=350M
 PrivateTmp=true
 ProtectSystem=full
+ReadWritePaths=/opt/label_system /mnt/sdcard_backup
 
 [Install]
 WantedBy=multi-user.target

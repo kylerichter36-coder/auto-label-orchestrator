@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto-Label System Setup and Diagnostics</title>
+  <style>
+    :root {
+      --bg: #18191c;
+      --panel: #202225;
+      --panel-border: #2f3136;
+      --text: #e0e2e5;
+      --text-muted: #8e9297;
+      --accent: #007acc;
+      --accent-hover: #0098ff;
+      --success: #3ba55d;
+      --warning: #faa81a;
+      --danger: #ed4245;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 50px; }
+    
+    header { background-color: var(--panel); border-bottom: 1px solid var(--panel-border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo-group { display: flex; align-items: center; gap: 12px; }
+    .logo-badge { background: #007acc; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 13px; }
+    .title { font-size: 18px; font-weight: 600; }
+    .nav-link { color: var(--text-muted); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .nav-link:hover { color: var(--text); }
+
+    .container { max-width: 960px; margin: 24px auto; padding: 0 16px; display: grid; gap: 20px; }
+    .card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px; padding: 20px; }
+    .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .stat-box { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid var(--panel-border); }
+    .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .stat-value { font-size: 15px; font-weight: 600; font-family: monospace; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+    .form-input { width: 100%; background: #121315; border: 1px solid var(--panel-border); border-radius: 4px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; }
+    .form-input:focus { border-color: var(--accent); }
+    .form-textarea { width: 100%; min-height: 80px; background: #121315; border: 1px solid var(--panel-border); border-radius: 4px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: monospace; outline: none; }
+
+    .btn { background-color: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-success { background-color: var(--success); }
+    .btn-warning { background-color: var(--warning); color: #000; }
+    .btn-danger { background-color: var(--danger); }
+    .btn-secondary { background-color: rgba(255,255,255,0.1); color: var(--text); }
+
+    .log-box { background: #0c0d0e; border: 1px solid var(--panel-border); border-radius: 4px; padding: 12px; font-family: monospace; font-size: 12px; color: #a3e635; min-height: 80px; max-height: 180px; overflow-y: auto; white-space: pre-wrap; margin-top: 10px; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-right: 6px; }
+    .status-dot.offline { background: var(--danger); }
+    .status-dot.warning { background: var(--warning); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-group">
+      <span class="logo-badge">SETUP</span>
+      <h1 class="title">System Configuration and OTA Updates</h1>
+    </div>
+    <div>
+      <a href="/" class="nav-link">Return to Dashboard &rarr;</a>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- System Diagnostics -->
+    <div class="card">
+      <div class="card-title">
+        <span>System Diagnostics</span>
+        <button class="btn btn-secondary" onclick="loadDiagnostics()">Refresh</button>
+      </div>
+      <div class="grid-2">
+        <div class="stat-box">
+          <div class="stat-label">Host Platform</div>
+          <div class="stat-value" id="diagPlatform">Loading...</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">System Uptime</div>
+          <div class="stat-value" id="diagUptime">Loading...</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Memory Usage</div>
+          <div class="stat-value" id="diagMemory">Loading...</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Storage Available</div>
+          <div class="stat-value" id="diagStorage">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OTA Software Updates -->
+    <div class="card">
+      <div class="card-title">
+        <span>Software Updates (Over The Air)</span>
+        <span id="updateBadge" style="font-size: 12px; color: var(--text-muted);">Current: Loading...</span>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+        Pulls the latest stable version directly from your GitHub repository and automatically restarts the background service without needing a keyboard or screen.
+      </p>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" onclick="checkForUpdates()">Check for Updates</button>
+        <button class="btn btn-success" id="btnApplyUpdate" onclick="applyUpdate()">Update and Restart Service</button>
+      </div>
+      <div id="updateLog" class="log-box">Ready. Click 'Check for Updates' to query GitHub repository.</div>
+    </div>
+
+    <!-- Wi-Fi Network Setup -->
+    <div class="card">
+      <div class="card-title">
+        <span>Wi-Fi Network Configuration</span>
+        <button class="btn btn-secondary" onclick="scanWifi()">Scan Available Networks</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Available Wi-Fi Networks</label>
+        <select id="wifiSelect" class="form-input" onchange="onWifiSelected()">
+          <option value="">Click 'Scan Available Networks' to list...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wi-Fi Password</label>
+        <input type="password" id="wifiPassword" class="form-input" placeholder="Enter network security key">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Device Disguise Name (Stealth Mode)</label>
+        <input type="text" id="wifiHostname" class="form-input" value="Lexmark-MX511" placeholder="e.g. Lexmark-MX511 or Office-Printer">
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+          Disguises the Orange Pi on the office router DHCP table as legitimate office equipment and suppresses rogue device name broadcasts.
+        </div>
+      </div>
+      <button class="btn btn-success" onclick="connectWifi()">Connect to Wi-Fi</button>
+      <div id="wifiLog" class="log-box" style="display: none;"></div>
+    </div>
+
+    <!-- Document Extraction Key Pool Management -->
+    <div class="card">
+      <div class="card-title">
+        <span>Document Extraction Key Pool</span>
+        <button class="btn btn-secondary" onclick="testKeys()">Test Keys Health</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Keys (Comma-separated pool for 429 auto-failover)</label>
+        <textarea id="geminiKeysInput" class="form-textarea" placeholder="AIzaSyA_KEY1, AIzaSyB_KEY2, AIzaSyC_KEY3"></textarea>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" onclick="saveKeys()">Save Key Pool</button>
+        <button class="btn btn-secondary" onclick="testKeys()">Test Key Health</button>
+      </div>
+      <div id="keysStatusLog" class="log-box" style="display: none;"></div>
+    </div>
+
+    <!-- Hardware Self-Test & Calibration -->
+    <div class="card">
+      <div class="card-title">
+        <span>Hardware Self-Test and Calibration</span>
+        <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="refreshHardwareDiagnostics()">Refresh Status</button>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+        Live hardware detection and direct calibration routines.
+      </p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--panel-border); padding: 10px 14px; border-radius: 6px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Argox OS-214 Printer Node</div>
+          <div id="diagPrinterStatus" style="font-weight: 600; font-size: 14px;">Checking...</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--panel-border); padding: 10px 14px; border-radius: 6px;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Lexmark Direct Scanner Interface</div>
+          <div id="diagScannerStatus" style="font-weight: 600; font-size: 14px;">Checking...</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" onclick="testPrinter()">Print Test Label (Argox OS-214)</button>
+        <button class="btn btn-secondary" onclick="testScannerLink()">Test Scanner Link (192.168.50.2)</button>
+      </div>
+      <div id="hwLog" class="log-box" style="display: none;"></div>
+    </div>
+
+    <!-- System Controls -->
+    <div class="card">
+      <div class="card-title">
+        <span>System Controls</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-warning" onclick="restartService()">Restart Label Service</button>
+        <button class="btn btn-danger" onclick="rebootSystem()">Reboot Host Machine</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    async function loadDiagnostics() {
+      try {
+        const res = await fetch('/api/setup/system_info');
+        const data = await res.json();
+        document.getElementById('diagPlatform').innerText = data.platform || 'Linux';
+        document.getElementById('diagUptime').innerText = data.uptime || 'N/A';
+        document.getElementById('diagMemory').innerText = `${data.mem_used_mb}MB / ${data.mem_total_mb}MB (${data.mem_percent}%)`;
+        document.getElementById('diagStorage').innerText = `${data.disk_free_gb} GB Free`;
+        document.getElementById('updateBadge').innerText = `Commit: ${data.git_commit || 'v1.0.0'}`;
+        if (data.gemini_keys) {
+          document.getElementById('geminiKeysInput').value = data.gemini_keys;
+        }
+        refreshHardwareDiagnostics();
+      } catch (err) {
+        console.error("Failed to load diagnostics:", err);
+      }
+    }
+
+    async function refreshHardwareDiagnostics() {
+      const pElem = document.getElementById('diagPrinterStatus');
+      const sElem = document.getElementById('diagScannerStatus');
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (data.hardware) {
+          const p = data.hardware.printer;
+          if (p.connected) {
+            pElem.innerHTML = `<span class="status-dot"></span> Connected (${p.device})`;
+          } else if (p.simulation) {
+            pElem.innerHTML = `<span class="status-dot warning"></span> [SIMULATION - HARDWARE BYPASSED]`;
+          } else {
+            pElem.innerHTML = `<span class="status-dot offline"></span> Disconnected (${p.device} missing)`;
+          }
+
+          const s = data.hardware.scanner;
+          if (s.reachable) {
+            sElem.innerHTML = `<span class="status-dot"></span> Online (${s.ip}) | Port 2525`;
+          } else if (s.carrier) {
+            sElem.innerHTML = `<span class="status-dot warning"></span> Cable Linked (${s.ip} not pinging)`;
+          } else {
+            sElem.innerHTML = `<span class="status-dot offline"></span> Disconnected (Port 2525 Ready)`;
+          }
+        }
+      } catch (err) {
+        if (pElem) pElem.innerText = "Error loading status";
+        if (sElem) sElem.innerText = "Error loading status";
+      }
+    }
+
+    async function checkForUpdates() {
+      const log = document.getElementById('updateLog');
+      log.innerText = "Querying remote Git repository...";
+      try {
+        const res = await fetch('/api/setup/update/check');
+        const data = await res.json();
+        if (data.update_available) {
+          log.innerText = `Update Available!\nRemote commit: ${data.remote_commit}\nMessage: ${data.remote_message}`;
+        } else {
+          log.innerText = `Up to date. Currently on latest commit (${data.current_commit}).`;
+        }
+      } catch (err) {
+        log.innerText = `Error checking updates: ${err.message}`;
+      }
+    }
+
+    async function applyUpdate() {
+      const log = document.getElementById('updateLog');
+      log.innerText = "Executing git pull and restarting service...";
+      try {
+        const res = await fetch('/api/setup/update/apply', { method: 'POST' });
+        const data = await res.json();
+        log.innerText = data.log || "Update applied successfully!";
+        setTimeout(loadDiagnostics, 3000);
+      } catch (err) {
+        log.innerText = `Update error: ${err.message}`;
+      }
+    }
+
+    async function scanWifi() {
+      const select = document.getElementById('wifiSelect');
+      select.innerHTML = '<option value="">Scanning Wi-Fi...</option>';
+      try {
+        const res = await fetch('/api/setup/wifi/scan');
+        const data = await res.json();
+        select.innerHTML = '<option value="">-- Select Network --</option>';
+        (data.networks || []).forEach(net => {
+          const opt = document.createElement('option');
+          opt.value = net.ssid;
+          opt.innerText = `${net.ssid} (${net.signal}% signal)`;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        select.innerHTML = '<option value="">Scan failed</option>';
+      }
+    }
+
+    function onWifiSelected() {
+      document.getElementById('wifiPassword').focus();
+    }
+
+    async function connectWifi() {
+      const ssid = document.getElementById('wifiSelect').value;
+      const psk = document.getElementById('wifiPassword').value;
+      const hostnameInput = document.getElementById('wifiHostname');
+      const hostname = hostnameInput ? hostnameInput.value.trim() : 'Lexmark-MX511';
+      const log = document.getElementById('wifiLog');
+      log.style.display = 'block';
+      log.innerText = `Connecting to ${ssid}...`;
+
+      try {
+        const res = await fetch('/api/setup/wifi/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ssid: ssid, password: psk, hostname: hostname })
+        });
+        const data = await res.json();
+        log.innerText = data.message || "Connected!";
+      } catch (err) {
+        log.innerText = `Connection failed: ${err.message}`;
+      }
+    }
+
+    async function saveKeys() {
+      const keys = document.getElementById('geminiKeysInput').value;
+      const res = await fetch('/api/setup/keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keys: keys })
+      });
+      const data = await res.json();
+      alert(data.message || "Keys saved successfully!");
+    }
+
+    async function testKeys() {
+      const log = document.getElementById('keysStatusLog');
+      log.style.display = 'block';
+      log.innerText = "Testing extraction engine API keys against verification endpoint...";
+      try {
+        const res = await fetch('/api/setup/keys/test', { method: 'POST' });
+        const data = await res.json();
+        log.innerText = data.results || "Test complete.";
+      } catch (err) {
+        log.innerText = `Key test failed: ${err.message}`;
+      }
+    }
+
+    async function testPrinter() {
+      const log = document.getElementById('hwLog');
+      log.style.display = 'block';
+      log.innerText = "Sending calibration test pattern to Argox OS-214...";
+      try {
+        const res = await fetch('/api/setup/printer/test', { method: 'POST' });
+        const data = await res.json();
+        log.innerText = data.message || "Test label dispatched!";
+      } catch (err) {
+        log.innerText = `Printer test failed: ${err.message}`;
+      }
+    }
+
+    async function testScannerLink() {
+      const log = document.getElementById('hwLog');
+      log.style.display = 'block';
+      log.innerText = "Pinging scanner on isolated interface (192.168.50.2)...";
+      try {
+        const res = await fetch('/api/setup/scanner/ping');
+        const data = await res.json();
+        log.innerText = data.message || "Scanner reachable!";
+      } catch (err) {
+        log.innerText = `Scanner ping error: ${err.message}`;
+      }
+    }
+
+    async function restartService() {
+      if (!confirm("Restart the Auto-Label background service?")) return;
+      await fetch('/api/setup/service/restart', { method: 'POST' });
+      alert("Service restart initiated.");
+    }
+
+    async function rebootSystem() {
+      if (!confirm("Reboot the host machine? It will take ~30 seconds to restart.")) return;
+      await fetch('/api/setup/system/reboot', { method: 'POST' });
+      alert("Reboot initiated. Page will reload in 30 seconds.");
+      setTimeout(() => location.reload(), 30000);
+    }
+
+    window.onload = loadDiagnostics;
+  </script>
+</body>
+</html>

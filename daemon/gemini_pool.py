@@ -63,7 +63,7 @@ class GeminiKeyPoolManager:
     Manages a pool of free-tier Gemini API keys with active failover,
     round-robin rotation, 429 rate-limit backoff, and token constraints.
     """
-    def __init__(self, keys: List[str], model: str = "gemini-2.5-flash", max_output_tokens: int = 1024, temperature: float = 0.0):
+    def __init__(self, keys: List[str], model: str = "gemini-3.8-flash", max_output_tokens: int = 1024, temperature: float = 0.0):
         self.model = model
         self.max_output_tokens = max_output_tokens
         self.temperature = temperature
@@ -117,21 +117,42 @@ class GeminiKeyPoolManager:
                 masked = f"...{key_state.key[-4:]}"
                 logger.info(f"Dispatching AI Vision request to {self.model} using key {masked}...")
 
-                response = key_state.client.models.generate_content(
-                    model=self.model,
-                    contents=[
-                        types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
-                        prompt
-                    ],
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        temperature=self.temperature,
-                        max_output_tokens=self.max_output_tokens,
-                    )
-                )
+                text_response = None
+                # Attempt modern interactions API first
+                if hasattr(key_state.client, "interactions"):
+                    try:
+                        import base64
+                        b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+                        interaction = key_state.client.interactions.create(
+                            model=self.model,
+                            input=[
+                                {"type": "text", "text": prompt},
+                                {"type": "image", "data": b64_pdf, "mime_type": "application/pdf"}
+                            ]
+                        )
+                        text_response = getattr(interaction, "output_text", None) or str(interaction)
+                    except Exception as ie:
+                        logger.warning(f"interactions.create failed ({ie}), falling back to models.generate_content...")
 
-                if response and response.text:
-                    return response.text
+                # Fallback to generate_content if interactions failed or unavailable
+                if not text_response and hasattr(key_state.client, "models"):
+                    response = key_state.client.models.generate_content(
+                        model=self.model,
+                        contents=[
+                            types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                            prompt
+                        ],
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            temperature=self.temperature,
+                            max_output_tokens=self.max_output_tokens,
+                        )
+                    )
+                    if response and response.text:
+                        text_response = response.text
+
+                if text_response:
+                    return text_response
                 else:
                     raise ValueError("Gemini returned empty response text.")
 
@@ -148,6 +169,24 @@ class GeminiKeyPoolManager:
                     raise e
 
         raise RuntimeError("Exceeded maximum retries across all Gemini API keys in pool.")
+
+    def is_configured(self) -> bool:
+        return any(
+            k.key
+            and not k.key.startswith("your_primary")
+            and not k.key.startswith("mock_")
+            and len(k.key) > 20
+            for k in self.keys
+        )
+
+    def get_valid_keys(self) -> List[KeyState]:
+        return [
+            k for k in self.keys
+            if k.key
+            and not k.key.startswith("your_primary")
+            and not k.key.startswith("mock_")
+            and len(k.key) > 20
+        ]
 
     def get_pool_status(self) -> List[dict]:
         return [

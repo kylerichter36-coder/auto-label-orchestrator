@@ -1,6 +1,8 @@
 import email
 import gc
 import logging
+import time
+from pathlib import Path
 from email import policy
 from email.message import EmailMessage
 from typing import Callable, Optional
@@ -50,6 +52,19 @@ class InfluxMailHandler:
                 mem_buffer = bytearray(payload)
                 del payload # drop original immutable bytes reference
 
+                # Generate ephemeral page preview in RAM before shredding
+                try:
+                    from daemon.pdf_preview import render_pdf_page_preview, store_ephemeral_preview
+                    preview_id = Path(filename).stem if filename else f"SCAN_{int(time.time())}"
+                    try:
+                        b64_preview = render_pdf_page_preview(bytes(mem_buffer), page_idx=0)
+                        store_ephemeral_preview(preview_id, b64_preview, ttl_seconds=600)
+                        logger.info(f"Generated ephemeral RAM preview for '{preview_id}'.")
+                    except Exception as pe:
+                        logger.warning(f"Could not render ephemeral preview for '{filename}': {pe}")
+                except ImportError:
+                    pass
+
                 try:
                     # Pass mutable in-memory buffer to processing pipeline
                     self.on_pdf_received(mem_buffer, filename)
@@ -58,7 +73,7 @@ class InfluxMailHandler:
                     self._shred_buffer(mem_buffer)
                     del mem_buffer
                     gc.collect()
-                    logger.info(f"Confidential Shred: in-memory PDF buffer zeroed and garbage collected.")
+                    logger.info("Confidential Shred: in-memory PDF buffer zeroed and garbage collected.")
 
         if not pdf_found:
             logger.warning("Email received from scanner but no PDF attachment was present.")
@@ -67,8 +82,11 @@ class InfluxMailHandler:
 
     def _shred_buffer(self, buffer: bytearray):
         """Zero-overwrites raw memory buffer before unlinking."""
+        if buffer is None:
+            return
         for i in range(len(buffer)):
             buffer[i] = 0
+        gc.collect()
 
 
 class LocalSMTPReceiver:

@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Auto-Label Orchestrator | BarTender Web</title>
+  <title>Auto-Label Orchestrator | Enterprise Print Station &amp; BarTender Designer</title>
   <style>
     :root {
       --bg: #18191c;
       --panel: #202225;
       --panel-border: #2f3136;
+      --panel-hover: #292b2f;
       --text: #e0e2e5;
       --text-muted: #8e9297;
       --accent: #007acc;
@@ -20,29 +21,46 @@
       --color-cyan: #00bcd4;
       --color-magenta: #e91e63;
       --color-yellow: #ffeb3b;
+      --bt-ruler-bg: #1f2124;
+      --bt-ruler-border: #36393f;
+      --bt-selection: #38bdf8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
-    
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 30px; overflow-x: hidden; }
+
     /* Header */
-    header { background-color: var(--panel); border-bottom: 1px solid var(--panel-border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+    header { background-color: var(--panel); border-bottom: 1px solid var(--panel-border); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .logo-group { display: flex; align-items: center; gap: 12px; }
-    .logo-badge { background: linear-gradient(135deg, #007acc, #00bcd4); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 13px; letter-spacing: 0.5px; }
+    .logo-badge { background: #007acc; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 13px; letter-spacing: 0.5px; font-family: monospace; }
     .title { font-size: 18px; font-weight: 600; }
-    .status-group { display: flex; align-items: center; gap: 16px; font-size: 13px; }
+
+    /* Primary Navigation Modes */
+    .app-nav { display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.25); padding: 3px; border-radius: 6px; border: 1px solid var(--panel-border); margin-left: 20px; }
+    .app-nav-btn { background: none; border: 1px solid transparent; color: var(--text-muted); padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s ease; text-decoration: none; }
+    .app-nav-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .app-nav-btn.active { background: var(--accent); color: #fff; border-color: var(--accent-hover); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+
+    .status-group { display: flex; align-items: center; gap: 10px; font-size: 12px; }
     .status-pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; border: 1px solid var(--panel-border); }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background-color: var(--success); }
+    .dot-yellow { background-color: var(--warning); }
+    .dot-red { background-color: var(--danger); }
+    .dot-gray { background-color: var(--text-muted); }
+
+    .btn-header { background-color: rgba(0, 122, 204, 0.15); border: 1px solid var(--accent); color: #38bdf8; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .btn-header:hover { background-color: rgba(0, 122, 204, 0.3); }
 
     /* Roll Action Banner */
-    .roll-banner { margin: 20px 24px 0 24px; background: linear-gradient(90deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
-    .roll-info h3 { font-size: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .roll-banner { margin: 16px 24px 0 24px; background: #202225; border: 1px solid var(--panel-border); border-left: 4px solid var(--accent); border-radius: 8px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .roll-info h3 { font-size: 15px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
     .roll-info p { font-size: 13px; color: var(--text-muted); }
-    .btn-batch-print { background-color: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+    .btn-batch-print { background-color: var(--success); color: white; border: none; padding: 9px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: opacity 0.2s; }
     .btn-batch-print:hover { opacity: 0.9; }
 
-    /* Color Tabs */
-    .tabs-nav { margin: 20px 24px 0 24px; display: flex; gap: 8px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; }
-    .tab-btn { background: none; border: 1px solid transparent; color: var(--text-muted); padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+    /* Filter Tabs */
+    .tabs-nav { margin: 16px 24px 0 24px; display: flex; gap: 8px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; }
+    .tab-btn { background: none; border: 1px solid transparent; color: var(--text-muted); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; }
     .tab-btn:hover { background: rgba(255,255,255,0.03); color: var(--text); }
     .tab-btn.active { background: var(--panel); border-color: var(--panel-border); color: white; font-weight: 600; }
     .badge { padding: 2px 6px; border-radius: 10px; font-size: 11px; background: rgba(255,255,255,0.1); }
@@ -51,36 +69,203 @@
     .badge-magenta { background: var(--color-magenta); color: #fff; font-weight: bold; }
     .badge-yellow { background: var(--color-yellow); color: #000; font-weight: bold; }
 
-    /* Content Area */
-    .content-area { margin: 20px 24px; }
-    .label-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    /* Confirmation Alert Banner */
+    .alert-banner { display: none; margin: 16px 24px 0 24px; background: rgba(250, 168, 26, 0.15); border: 1px solid var(--warning); border-radius: 8px; padding: 14px; }
+    .alert-banner h4 { color: var(--warning); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
 
-    /* BarTender-style Label Card */
-    .label-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
-    .label-header { background: rgba(0,0,0,0.2); padding: 8px 12px; font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; border-bottom: 1px solid var(--panel-border); }
-    .label-preview-box { padding: 16px; background: #fff; color: #000; margin: 12px; border-radius: 4px; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); min-height: 140px; display: flex; flex-direction: column; justify-content: space-between; border: 2px solid #ccc; }
-    .label-title { font-size: 16px; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
-    .label-desc { font-size: 12px; color: #555; margin-top: 4px; }
-    .label-note { background: #fffae6; border: 1px dashed #d48800; padding: 4px 6px; font-size: 11px; border-radius: 2px; margin-top: 6px; color: #b35b00; font-weight: 600; }
-    .label-barcode-mock { height: 28px; background: repeating-linear-gradient(90deg, #000, #000 2px, transparent 2px, transparent 5px); margin-top: 10px; }
-    
-    .label-controls { padding: 12px; background: rgba(0,0,0,0.1); border-top: 1px solid var(--panel-border); display: flex; align-items: center; justify-content: space-between; }
-    .qty-stepper { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--panel-border); border-radius: 4px; padding: 2px; }
+    /* WMS Table Container */
+    .content-area { margin: 16px 24px; }
+    .table-container { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px; overflow: hidden; }
+    .wms-queue-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    .wms-queue-table th { background: #18191c; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 14px; border-bottom: 1px solid var(--panel-border); }
+    .wms-queue-table td { padding: 12px 14px; border-bottom: 1px solid var(--panel-border); vertical-align: middle; }
+    .wms-queue-table tr:hover { background: var(--panel-hover); }
+    .wms-queue-table tr.row-held { opacity: 0.6; }
+
+    .state-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .state-queued { background: rgba(0, 122, 204, 0.2); color: #38bdf8; border: 1px solid #007acc; }
+    .state-printed { background: rgba(59, 165, 93, 0.2); color: #4ade80; border: 1px solid #3ba55d; }
+    .state-held { background: rgba(250, 168, 26, 0.2); color: #fbbf24; border: 1px solid #faa81a; }
+
+    .cell-quote { font-weight: 700; color: #fff; font-family: monospace; font-size: 13px; }
+    .cell-sku { font-size: 13px; font-weight: 600; color: #38bdf8; margin-top: 2px; }
+    .cell-desc { font-size: 12px; color: var(--text); }
+    .cell-annotation { background: rgba(250, 168, 26, 0.1); border: 1px dashed var(--warning); padding: 3px 6px; font-size: 11px; border-radius: 3px; margin-top: 4px; color: #fbbf24; font-weight: 500; display: inline-block; }
+
+    .barcode-cell { font-family: monospace; font-size: 12px; color: #e2e8f0; }
+    .barcode-code { background: #121315; padding: 3px 6px; border-radius: 3px; border: 1px solid #334155; display: inline-block; letter-spacing: 1px; }
+
+    .qty-stepper { display: inline-flex; align-items: center; gap: 2px; background: #121315; border: 1px solid var(--panel-border); border-radius: 4px; padding: 2px; }
     .qty-btn { background: none; border: none; color: var(--text); width: 26px; height: 26px; border-radius: 2px; cursor: pointer; font-size: 14px; font-weight: bold; }
     .qty-btn:hover { background: rgba(255,255,255,0.1); }
-    .qty-input { width: 44px; text-align: center; background: none; border: none; color: white; font-weight: bold; font-size: 14px; }
-    .btn-print-single { background-color: var(--accent); color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .btn-print-single:hover { background-color: var(--accent-hover); }
+    .qty-input { width: 44px; text-align: center; background: none; border: none; color: white; font-weight: bold; font-size: 13px; outline: none; }
 
-    /* Outer Box Card */
-    .outer-box-card { background: var(--panel); border: 2px solid #475569; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-    .box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--panel-border); padding-bottom: 8px; }
-    .box-title { font-size: 18px; font-weight: bold; color: #38bdf8; }
-    .box-item-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); font-size: 14px; }
-    
-    /* Confirmation Alert Banner */
-    .alert-banner { display: none; margin: 20px 24px 0 24px; background: rgba(250, 168, 26, 0.15); border: 1px solid var(--warning); border-radius: 8px; padding: 16px; }
-    .alert-banner h4 { color: var(--warning); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .action-group { display: flex; gap: 6px; justify-content: flex-end; }
+    .btn-action { border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .btn-action:hover { opacity: 0.9; }
+    .btn-print { background-color: var(--accent); color: white; }
+    .btn-hold { background-color: rgba(250, 168, 26, 0.2); color: #fbbf24; border: 1px solid var(--warning); }
+    .btn-delete { background-color: rgba(237, 66, 69, 0.2); color: #f87171; border: 1px solid var(--danger); }
+    .btn-view-scan { background-color: rgba(255, 255, 255, 0.08); color: #e0e2e5; border: 1px solid var(--panel-border); }
+    .btn-preview-label { background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #0284c7; }
+    .btn-preview-label:hover { background-color: rgba(56, 189, 248, 0.25); color: #ffffff; }
+    .template-badge { background: #121315; color: #58a6ff; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid #30363d; display: inline-block; }
+
+    .box-badge { background: #1e293b; color: #38bdf8; font-weight: 700; padding: 4px 8px; border-radius: 4px; border: 1px solid #334155; font-family: monospace; }
+    .weight-badge { background: rgba(163, 230, 53, 0.15); color: #a3e635; font-weight: 700; padding: 4px 8px; border-radius: 4px; border: 1px solid #65a30d; font-family: monospace; }
+
+    /* =========================================================================
+       BARTENDER INDUSTRIAL LABEL DESIGNER STYLES
+       ========================================================================= */
+    #designerContainer { display: none; margin: 12px 24px; flex-direction: column; gap: 8px; }
+
+    /* BarTender Top Ribbon Toolbar */
+    .bt-toolbar { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 6px; padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .bt-tool-group { display: flex; align-items: center; gap: 6px; }
+    .bt-sep { width: 1px; height: 24px; background: var(--panel-border); margin: 0 4px; }
+    .bt-btn { background: #2f3136; border: 1px solid #40444b; color: #dcddde; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+    .bt-btn:hover { background: #393c43; color: #fff; border-color: #585b62; }
+    .bt-btn-primary { background: #007acc; border-color: #0098ff; color: white; }
+    .bt-btn-primary:hover { background: #0098ff; }
+    .bt-btn-success { background: #2e7d32; border-color: #3ba55d; color: white; }
+    .bt-btn-success:hover { background: #3ba55d; }
+    .bt-btn-danger { background: rgba(237, 66, 69, 0.15); border-color: #ed4245; color: #f87171; }
+    .bt-btn-danger:hover { background: #ed4245; color: white; }
+    .bt-select { background: #121315; border: 1px solid var(--panel-border); color: #fff; padding: 5px 8px; border-radius: 4px; font-size: 12px; outline: none; }
+    .bt-input-num { width: 55px; background: #121315; border: 1px solid var(--panel-border); color: #fff; padding: 4px 6px; border-radius: 4px; font-size: 12px; text-align: center; }
+
+    /* BarTender Main Layout Grid */
+    .bt-workspace { display: grid; grid-template-columns: 220px 1fr 310px; gap: 8px; height: calc(100vh - 190px); min-height: 600px; }
+
+    /* Left Component Palette */
+    .bt-toolbox { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 6px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+    .bt-section-title { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; border-bottom: 1px solid var(--panel-border); padding-bottom: 4px; }
+    .bt-palette-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .bt-tool-card { background: #18191c; border: 1px solid #303338; border-radius: 4px; padding: 8px 6px; text-align: center; cursor: pointer; transition: all 0.15s ease; user-select: none; }
+    .bt-tool-card:hover { background: #26282c; border-color: var(--accent); color: #fff; }
+    .bt-tool-icon { font-family: monospace; font-size: 14px; font-weight: bold; color: #38bdf8; display: block; margin-bottom: 2px; }
+    .bt-tool-name { font-size: 11px; font-weight: 600; color: #dcddde; }
+
+    .bt-var-list { display: flex; flex-direction: column; gap: 5px; }
+    .bt-var-btn { background: #141517; border: 1px solid #2d3139; color: #a5b4fc; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-family: monospace; text-align: left; cursor: pointer; transition: background 0.15s; }
+    .bt-var-btn:hover { background: #1e222b; border-color: #6366f1; color: #fff; }
+
+    /* Center Visual Canvas with Rulers */
+    .bt-canvas-viewport { background: #121315; border: 1px solid var(--panel-border); border-radius: 6px; display: grid; grid-template-rows: 24px 1fr; grid-template-columns: 24px 1fr; overflow: hidden; position: relative; }
+    .bt-corner { background: var(--bt-ruler-bg); border-right: 1px solid var(--bt-ruler-border); border-bottom: 1px solid var(--bt-ruler-border); z-index: 10; font-size: 9px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-family: monospace; }
+    .bt-ruler-h { background: var(--bt-ruler-bg); border-bottom: 1px solid var(--bt-ruler-border); overflow: hidden; position: relative; }
+    .bt-ruler-v { background: var(--bt-ruler-bg); border-right: 1px solid var(--bt-ruler-border); overflow: hidden; position: relative; }
+    .bt-canvas-scroll { overflow: auto; padding: 30px; display: flex; align-items: flex-start; justify-content: flex-start; position: relative; }
+
+    /* Thermal Label Paper on Board */
+    .bt-label-board {
+      background: #ffffff;
+      color: #000000;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px #334155;
+      border-radius: 4px;
+      position: relative;
+      transform-origin: top left;
+      user-select: none;
+      background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+      background-size: 16px 16px; /* 2mm grid @ 8 dots/mm */
+    }
+
+    /* Interactive Elements on Label Paper */
+    .bt-elem {
+      position: absolute;
+      box-sizing: border-box;
+      cursor: move;
+      border: 1px dashed transparent;
+      user-select: none;
+      display: flex;
+      align-items: flex-start;
+      overflow: hidden;
+      transform-origin: top left;
+    }
+    .bt-elem:hover { border-color: rgba(0, 122, 204, 0.5); }
+    .bt-elem.selected {
+      border: 1px solid var(--bt-selection);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+      z-index: 50;
+    }
+
+    /* Resize Handles */
+    .bt-handle {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      background: #fff;
+      border: 1px solid #0284c7;
+      border-radius: 1px;
+      z-index: 60;
+    }
+    .bt-handle-nw { top: -4px; left: -4px; cursor: nw-resize; }
+    .bt-handle-n  { top: -4px; left: calc(50% - 3px); cursor: n-resize; }
+    .bt-handle-ne { top: -4px; right: -4px; cursor: ne-resize; }
+    .bt-handle-e  { top: calc(50% - 3px); right: -4px; cursor: e-resize; }
+    .bt-handle-se { bottom: -4px; right: -4px; cursor: se-resize; }
+    .bt-handle-s  { bottom: -4px; left: calc(50% - 3px); cursor: s-resize; }
+    .bt-handle-sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+    .bt-handle-w  { top: calc(50% - 3px); left: -4px; cursor: w-resize; }
+    .bt-handle-rot { top: -18px; left: calc(50% - 4px); width: 8px; height: 8px; border-radius: 50%; background: #0284c7; cursor: grab; }
+
+    /* Element Render Types */
+    .bt-elem-text { font-family: 'Courier New', Courier, monospace; font-weight: 700; line-height: 1.1; white-space: nowrap; overflow: visible; }
+    .bt-elem-text.reverse { background: #000; color: #fff; padding: 2px; }
+    .bt-elem-barcode { flex-direction: column; align-items: center; justify-content: center; }
+    .bt-barcode-svg { width: 100%; height: 100%; display: block; }
+    .bt-elem-line { background: #000; }
+    .bt-elem-box { border: 2px solid #000; background: transparent; }
+
+    /* Right Properties Inspector */
+    .bt-inspector { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 6px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .bt-tabs-mini { display: flex; gap: 4px; border-bottom: 1px solid var(--panel-border); padding-bottom: 6px; }
+    .bt-tab-mini { background: none; border: none; color: var(--text-muted); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .bt-tab-mini.active { background: #2f3136; color: white; }
+
+    .bt-prop-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+    .bt-prop-row label { color: var(--text-muted); font-size: 11px; font-weight: 500; min-width: 70px; }
+    .bt-prop-input { flex: 1; background: #121315; border: 1px solid var(--panel-border); color: #fff; padding: 5px 8px; border-radius: 4px; font-size: 12px; outline: none; }
+    .bt-prop-input:focus { border-color: var(--accent); }
+    .bt-prop-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+    /* Bottom Live PPLB Command Stream Drawer */
+    .bt-drawer { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 6px; padding: 8px 14px; display: flex; flex-direction: column; gap: 6px; }
+    .bt-drawer-bar { display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-family: monospace; color: var(--text-muted); }
+    .bt-drawer-stream { background: #0c0d0f; border: 1px solid #23272a; border-radius: 4px; padding: 8px 12px; font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; color: #7ee787; max-height: 80px; overflow-y: auto; white-space: pre-wrap; }
+
+    /* Modals */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-container { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px; width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .modal-header { padding: 14px 20px; border-bottom: 1px solid var(--panel-border); display: flex; justify-content: space-between; align-items: center; background: #18191c; }
+    .modal-title-group { display: flex; align-items: center; gap: 10px; }
+    .modal-tag { background: #007acc; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close-btn { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; }
+    .modal-close-btn:hover { color: white; }
+    .modal-select { background: #121315; border: 1px solid var(--panel-border); color: var(--text); padding: 5px 10px; border-radius: 4px; font-size: 12px; outline: none; }
+
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0d0e10; }
+    .modal-img { max-width: 100%; max-height: 65vh; object-fit: contain; border: 1px solid #334155; background: #fff; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .modal-placeholder { color: var(--text-muted); font-size: 13px; text-align: center; padding: 40px; }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid var(--panel-border); display: flex; justify-content: space-between; align-items: center; background: #18191c; font-size: 12px; }
+    .modal-sec-notice { color: var(--text-muted); font-size: 11px; }
+
+    /* Thermal Preview Cards */
+    .thermal-card { background: #ffffff; color: #000000; font-family: 'Courier New', Courier, monospace; border-radius: 6px; padding: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.7); position: relative; margin: 0 auto; text-align: left; }
+    .thermal-card-cartridge { width: 440px; min-height: 220px; }
+    .thermal-card-outerbox { width: 440px; min-height: 480px; }
+    .thermal-spec-badge { position: absolute; top: -10px; right: 15px; background: #007acc; color: white; font-family: sans-serif; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
+    .thermal-title { font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .thermal-subtitle { font-size: 12px; font-weight: 700; color: #222; margin-bottom: 10px; }
+    .thermal-note { font-size: 11px; font-style: italic; background: #f3f4f6; padding: 4px 6px; border-left: 3px solid #000; margin-bottom: 8px; }
+    .thermal-manifest-item { font-size: 12px; font-weight: 700; margin: 4px 0; }
+    .thermal-divider { border-top: 2px solid #000; margin: 10px 0; }
+    .thermal-barcode-box { margin: 12px 0 6px 0; text-align: center; }
+    .thermal-barcode-stripes { height: 42px; background: repeating-linear-gradient(90deg, #000 0, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 7px, #fff 7px, #fff 8px, #000 8px, #000 12px, #fff 12px, #fff 15px); margin: 0 auto 3px auto; width: 85%; }
+    .thermal-barcode-val { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; }
+    .thermal-footer-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; border-top: 2px solid #000; padding-top: 6px; margin-top: 10px; }
+    .pplb-raw-drawer { background: #090a0c; border: 1px solid #30363d; border-radius: 4px; padding: 10px; font-family: monospace; font-size: 11px; color: #a5d6ff; max-height: 120px; overflow-y: auto; white-space: pre-wrap; width: 100%; margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -89,54 +274,599 @@
     <div class="logo-group">
       <span class="logo-badge">PPLB</span>
       <h1 class="title">Auto-Label Orchestrator</h1>
+      <nav class="app-nav">
+        <button class="app-nav-btn active" id="btnNavWms" onclick="switchAppMode('wms')">[#] WMS Queue</button>
+        <button class="app-nav-btn" id="btnNavDesigner" onclick="switchAppMode('designer')">[+] BarTender Designer</button>
+        <a href="/setup" class="app-nav-btn">[*] Setup &amp; OTA</a>
+      </nav>
     </div>
     <div class="status-group">
-      <div class="status-pill"><span class="dot"></span> Scanner: Direct LAN (192.168.50.2)</div>
-      <div class="status-pill"><span class="dot"></span> Argox OS-214: USB Ready</div>
-      <div class="status-pill"><span class="dot"></span> Gemini Free Pool: Active</div>
+      <div class="status-pill" id="pillScanner" title="Direct Ethernet scanner connection"><span class="dot dot-gray" id="dotScanner"></span> <span id="textScanner">Scanner: Checking...</span></div>
+      <div class="status-pill" id="pillPrinter" title="Argox OS-214 thermal printer connection"><span class="dot dot-gray" id="dotPrinter"></span> <span id="textPrinter">Argox OS-214: Checking...</span></div>
+      <div class="status-pill" id="pillGemini" title="OCR Document Extraction Engine key pool"><span class="dot dot-gray" id="dotGemini"></span> <span id="textGemini">Extraction Engine: Checking...</span></div>
+      <button class="btn-header" onclick="openPdfModal()" title="View in-memory PDF scan previews"><span class="dot dot-gray" id="dotPreview"></span> Scanned Previews (<span id="previewCountBadge">0</span>)</button>
     </div>
   </header>
 
-  <!-- Warning Banner for Ambiguous Handwriting -->
-  <div id="alertBanner" class="alert-banner">
-    <h4>Verification Needed: Hand-Written Ambiguity</h4>
-    <p id="alertReason">Quote QT-90124 line 2 has ambiguous handwritten quantity.</p>
-    <div style="margin-top: 10px;">
-      <button class="btn-print-single" onclick="approvePending()">Approve and Enqueue</button>
+  <!-- =========================================================================
+       VIEW 1: WMS PRODUCTION PRINT QUEUE
+       ========================================================================= -->
+  <div id="wmsContainer">
+    <!-- Warning Banner for Ambiguous Handwriting -->
+    <div id="alertBanner" class="alert-banner">
+      <h4>Verification Needed: Hand-Written Ambiguity</h4>
+      <p id="alertReason">Quote line item has ambiguous handwritten quantity.</p>
+      <div style="margin-top: 10px;">
+        <button class="btn-action btn-print" onclick="approvePending()">Approve and Enqueue</button>
+      </div>
+    </div>
+
+    <!-- Smart Roll Action Banner -->
+    <div class="roll-banner">
+      <div class="roll-info">
+        <h3 id="currentRollTitle">Active Roll: Black</h3>
+        <p id="currentRollDesc">0 Black labels ready to print. Continuous batch run queued.</p>
+      </div>
+      <div>
+        <button class="btn-batch-print" id="batchPrintBtn" onclick="printActiveColorBatch()">Print Batch</button>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('ALL')">All <span class="badge" id="badgeAll">0</span></button>
+      <button class="tab-btn" onclick="switchTab('BLACK')">Black <span class="badge badge-black" id="badgeBlack">0</span></button>
+      <button class="tab-btn" onclick="switchTab('CYAN')">Cyan <span class="badge badge-cyan" id="badgeCyan">0</span></button>
+      <button class="tab-btn" onclick="switchTab('MAGENTA')">Magenta <span class="badge badge-magenta" id="badgeMagenta">0</span></button>
+      <button class="tab-btn" onclick="switchTab('YELLOW')">Yellow <span class="badge badge-yellow" id="badgeYellow">0</span></button>
+      <button class="tab-btn" onclick="switchTab('OUTER_BOX')">Outer Boxes <span class="badge" id="badgeBox">0</span></button>
+    </div>
+
+    <!-- Enterprise WMS Row Table Content Area -->
+    <div class="content-area">
+      <div class="table-container" id="tableContainer">
+        <table class="wms-queue-table" id="queueTable">
+          <thead id="queueTableHead">
+            <tr>
+              <th style="width: 100px;">State</th>
+              <th style="width: 80px;">Roll</th>
+              <th style="width: 170px;">Quote ID &amp; SKU</th>
+              <th>Description &amp; Annotation</th>
+              <th style="width: 170px;">Barcode Monospace SKU</th>
+              <th style="width: 130px; text-align: center;">Batch Quantity</th>
+              <th style="width: 220px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="queueTableBody">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- Smart Roll Action Banner -->
-  <div class="roll-banner">
-    <div class="roll-info">
-      <h3 id="currentRollTitle">Active Roll: Black</h3>
-      <p id="currentRollDesc">30 Black labels ready to print. Continuous batch run queued.</p>
+  <!-- =========================================================================
+       VIEW 2: BARTENDER INDUSTRIAL WYSIWYG LABEL DESIGNER
+       ========================================================================= -->
+  <div id="designerContainer">
+    <!-- BarTender Command Ribbon Toolbar -->
+    <div class="bt-toolbar">
+      <div class="bt-tool-group">
+        <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Template:</label>
+        <select id="btTemplateSelect" class="bt-select" style="min-width: 220px;">
+          <option value="">Loading templates...</option>
+        </select>
+        <button class="bt-btn" onclick="btLoadSelectedTemplate()" title="Load selected label into designer">Open</button>
+        <button class="bt-btn bt-btn-primary" onclick="btOpenNewModal()" title="Create new blank label">+ New Label</button>
+        <button class="bt-btn bt-btn-success" onclick="btOpenSaveModal()" title="Save label directly to disk as .PRD">Save .PRD</button>
+      </div>
+
+      <div class="bt-sep"></div>
+
+      <div class="bt-tool-group">
+        <button class="bt-btn" onclick="btZoom(-0.15)" title="Zoom Out">-</button>
+        <span id="btZoomVal" style="font-size: 11px; font-family: monospace; min-width: 42px; text-align: center; color: #fff;">100%</span>
+        <button class="bt-btn" onclick="btZoom(0.15)" title="Zoom In">+</button>
+        <button class="bt-btn" onclick="btZoomReset()" title="Reset Zoom">Fit</button>
+
+        <select id="btUnitSelect" class="bt-select" onchange="btChangeUnit(this.value)" title="Display Units">
+          <option value="mm">mm</option>
+          <option value="in">inch</option>
+          <option value="dots">dots</option>
+        </select>
+
+        <button class="bt-btn" id="btnSnapGrid" onclick="btToggleSnap()" style="color: #4ade80;">Snap: 1mm</button>
+        <button class="bt-btn" id="btnShowGrid" onclick="btToggleGrid()" style="color: #38bdf8;">Grid: On</button>
+      </div>
+
+      <div class="bt-sep"></div>
+
+      <div class="bt-tool-group">
+        <button class="bt-btn" onclick="btUndo()" title="Undo action">Undo</button>
+        <button class="bt-btn" onclick="btRedo()" title="Redo action">Redo</button>
+        <button class="bt-btn bt-btn-danger" onclick="btDeleteSelected()" title="Delete selected element">Delete</button>
+        <button class="bt-btn" onclick="btClearCanvas()" title="Clear all elements">Clear</button>
+      </div>
+
+      <div class="bt-sep"></div>
+
+      <div class="bt-tool-group">
+        <label style="font-size: 11px; color: var(--text-muted);">Print Qty:</label>
+        <input type="number" id="btPrintQty" class="bt-input-num" value="1" min="1" max="99">
+        <button class="bt-btn bt-btn-primary" onclick="btTestPrint()" title="Send directly to Argox OS-214 (/dev/usb/lp0)">Test Print</button>
+      </div>
     </div>
-    <div>
-      <button class="btn-batch-print" id="batchPrintBtn" onclick="printActiveColorBatch()">Print Batch (30 Labels)</button>
+
+    <!-- Main 3-Column Designer Workspace -->
+    <div class="bt-workspace">
+      <!-- 1. Left Component Toolbox -->
+      <div class="bt-toolbox">
+        <div class="bt-section-title">Object Toolbox</div>
+        <div class="bt-palette-grid">
+          <div class="bt-tool-card" onclick="btAddElement('text')">
+            <span class="bt-tool-icon">[T]</span>
+            <div class="bt-tool-name">Text</div>
+          </div>
+          <div class="bt-tool-card" onclick="btAddElement('barcode_1d')">
+            <span class="bt-tool-icon">[|||]</span>
+            <div class="bt-tool-name">Barcode 1D</div>
+          </div>
+          <div class="bt-tool-card" onclick="btAddElement('barcode_2d')">
+            <span class="bt-tool-icon">[QR]</span>
+            <div class="bt-tool-name">2D Code</div>
+          </div>
+          <div class="bt-tool-card" onclick="btAddElement('line')">
+            <span class="bt-tool-icon">[-]</span>
+            <div class="bt-tool-name">Line</div>
+          </div>
+          <div class="bt-tool-card" onclick="btAddElement('box')">
+            <span class="bt-tool-icon">[BOX]</span>
+            <div class="bt-tool-name">Box Border</div>
+          </div>
+          <div class="bt-tool-card" onclick="btAddElement('date')">
+            <span class="bt-tool-icon">[D]</span>
+            <div class="bt-tool-name">Date Stamp</div>
+          </div>
+        </div>
+
+        <div class="bt-section-title" style="margin-top: 8px;">Variable Placeholders</div>
+        <div class="bt-var-list">
+          <button class="bt-var-btn" onclick="btInsertVariableElement('{QUOTE_NUMBER}')" title="Insert Quote ID">+ {QUOTE_NUMBER}</button>
+          <button class="bt-var-btn" onclick="btInsertVariableElement('{SKU}')" title="Insert Part SKU">+ {SKU}</button>
+          <button class="bt-var-btn" onclick="btInsertVariableElement('{ITEM_NAME}')" title="Insert Item Description">+ {ITEM_NAME}</button>
+          <button class="bt-var-btn" onclick="btInsertVariableElement('{WEIGHT_KG}')" title="Insert Gross Weight">+ {WEIGHT_KG}</button>
+          <button class="bt-var-btn" onclick="btInsertVariableElement('{QUANTITY}')" title="Insert Batch Quantity">+ {QUANTITY}</button>
+          <button class="bt-var-btn" onclick="btInsertVariableBarcode('{BARCODE}')" title="Insert Barcode SKU">+ Barcode {BARCODE}</button>
+        </div>
+
+        <div class="bt-section-title" style="margin-top: 8px;">Hardware Calibrations</div>
+        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+          Target: <strong>Argox OS-214</strong><br>
+          Resolution: <strong>203.2 DPI</strong><br>
+          Density: <strong>8 dots / mm</strong><br>
+          Emulation: <strong>Native PPLB</strong><br>
+          Port: <strong>/dev/usb/lp0</strong>
+        </div>
+      </div>
+
+      <!-- 2. Center Visual Canvas with Precise Millimeter Rulers -->
+      <div class="bt-canvas-viewport" id="btViewport">
+        <div class="bt-corner" id="btRulerCorner">mm</div>
+        <div class="bt-ruler-h" id="btRulerH">
+          <svg id="svgRulerH" width="100%" height="24"></svg>
+        </div>
+        <div class="bt-ruler-v" id="btRulerV">
+          <svg id="svgRulerV" width="24" height="100%"></svg>
+        </div>
+        <div class="bt-canvas-scroll" id="btCanvasScroll" onscroll="btSyncRulers()">
+          <div class="bt-label-board" id="btLabelPaper" onclick="btOnBoardClick(event)">
+            <!-- Rendered elements inserted here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Right Properties Inspector Sidebar -->
+      <div class="bt-inspector">
+        <div class="bt-tabs-mini">
+          <button class="bt-tab-mini active" id="btnTabElemProps" onclick="btSwitchInspectorTab('elem')">Properties</button>
+          <button class="bt-tab-mini" id="btnTabLabelSetup" onclick="btSwitchInspectorTab('setup')">Label Setup</button>
+        </div>
+
+        <!-- Tab 1: Element Properties -->
+        <div id="btPaneElemProps" style="display: flex; flex-direction: column; gap: 10px;">
+          <div id="btNoElemSelected" style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 30px 10px;">
+            Select an element on canvas to modify its properties, or add an object from the toolbox.
+          </div>
+
+          <div id="btElemControls" style="display: none; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--panel-border); padding-bottom: 6px;">
+              <span id="btElemTypeBadge" class="logo-badge" style="background: #334155; font-size: 11px;">TEXT</span>
+              <div style="display: flex; gap: 4px;">
+                <button class="bt-btn" style="padding: 2px 6px;" onclick="btRotateSelected(90)" title="Rotate 90 deg">Rot 90</button>
+                <button class="bt-btn" style="padding: 2px 6px;" onclick="btDuplicateSelected()" title="Duplicate">Dup</button>
+              </div>
+            </div>
+
+            <!-- Geometry (X, Y, W, H, Rotation) -->
+            <div class="bt-section-title">Geometry (<span class="unit-label">mm</span>)</div>
+            <div class="bt-prop-grid2">
+              <div class="bt-prop-row">
+                <label>X:</label>
+                <input type="number" id="propX" class="bt-prop-input" onchange="btUpdateProp('x', this.value)" step="0.5">
+              </div>
+              <div class="bt-prop-row">
+                <label>Y:</label>
+                <input type="number" id="propY" class="bt-prop-input" onchange="btUpdateProp('y', this.value)" step="0.5">
+              </div>
+            </div>
+            <div class="bt-prop-grid2">
+              <div class="bt-prop-row">
+                <label>Width:</label>
+                <input type="number" id="propWidth" class="bt-prop-input" onchange="btUpdateProp('width', this.value)" step="0.5">
+              </div>
+              <div class="bt-prop-row">
+                <label>Height:</label>
+                <input type="number" id="propHeight" class="bt-prop-input" onchange="btUpdateProp('height', this.value)" step="0.5">
+              </div>
+            </div>
+            <div class="bt-prop-row">
+              <label>Rotation:</label>
+              <select id="propRotation" class="bt-prop-input" onchange="btUpdateProp('rotation', this.value)">
+                <option value="0">0 deg (Normal)</option>
+                <option value="1">90 deg</option>
+                <option value="2">180 deg</option>
+                <option value="3">270 deg</option>
+              </select>
+            </div>
+
+            <!-- Text Specific Properties -->
+            <div id="btPropsText" style="display: none; flex-direction: column; gap: 8px;">
+              <div class="bt-section-title">Text Content</div>
+              <textarea id="propTextContent" class="bt-prop-input" rows="2" oninput="btUpdateProp('content', this.value)"></textarea>
+
+              <div class="bt-prop-row">
+                <label>PPLB Font:</label>
+                <select id="propFont" class="bt-prop-input" onchange="btUpdateProp('font', this.value)">
+                  <option value="1">Font 1 (8x12 dots / 1.5mm)</option>
+                  <option value="2">Font 2 (10x16 dots / 2.0mm)</option>
+                  <option value="3">Font 3 (12x20 dots / 2.5mm)</option>
+                  <option value="4">Font 4 (14x24 dots / 3.0mm)</option>
+                  <option value="5">Font 5 (32x48 dots / 6.0mm)</option>
+                </select>
+              </div>
+
+              <div class="bt-prop-row">
+                <label>Typeface:</label>
+                <select id="propFontFamily" class="bt-prop-input" onchange="btUpdateProp('font_family', this.value)">
+                  <option value="'Courier New', Courier, monospace">Resident Monospace</option>
+                  <option value="'OCR-A', 'Consolas', monospace">OCR-A Optical Reader</option>
+                  <option value="Arial, Helvetica, sans-serif">Industrial Sans</option>
+                  <option value="'Segoe UI', Roboto, sans-serif">Workstation Clean</option>
+                </select>
+              </div>
+
+              <div class="bt-prop-grid2">
+                <div class="bt-prop-row">
+                  <label>H Scale:</label>
+                  <select id="propHMult" class="bt-prop-input" onchange="btUpdateProp('h_mult', this.value)">
+                    <option value="1">1x</option><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="5">5x</option><option value="6">6x</option><option value="7">7x</option><option value="8">8x</option>
+                  </select>
+                </div>
+                <div class="bt-prop-row">
+                  <label>V Scale:</label>
+                  <select id="propVMult" class="bt-prop-input" onchange="btUpdateProp('v_mult', this.value)">
+                    <option value="1">1x</option><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="5">5x</option><option value="6">6x</option><option value="7">7x</option><option value="8">8x</option><option value="9">9x</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="bt-prop-row">
+                <label>Reverse:</label>
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="propReverse" onchange="btUpdateProp('reverse', this.checked)"> Invert (White on Black)
+                </label>
+              </div>
+            </div>
+
+            <!-- Barcode 1D Properties -->
+            <div id="btPropsBarcode1D" style="display: none; flex-direction: column; gap: 8px;">
+              <div class="bt-section-title">Barcode Parameters</div>
+              <div class="bt-prop-row">
+                <label>Data:</label>
+                <input type="text" id="propBarcodeData" class="bt-prop-input" oninput="btUpdateProp('content', this.value)">
+              </div>
+              <div class="bt-prop-row">
+                <label>Type:</label>
+                <select id="propBarcodeType" class="bt-prop-input" onchange="btUpdateProp('barcode_type', this.value)">
+                  <option value="1">Code 128 (Autoselect)</option>
+                  <option value="3">Code 39</option>
+                  <option value="E30">EAN-13</option>
+                  <option value="E80">EAN-8</option>
+                  <option value="9">UPC-A</option>
+                </select>
+              </div>
+              <div class="bt-prop-row">
+                <label>HRI Text:</label>
+                <select id="propBarcodeHRI" class="bt-prop-input" onchange="btUpdateProp('hri', this.value)">
+                  <option value="B">Below Barcode</option>
+                  <option value="T">Above Barcode</option>
+                  <option value="N">None (No Text)</option>
+                </select>
+              </div>
+              <div class="bt-prop-grid2">
+                <div class="bt-prop-row">
+                  <label>Narrow:</label>
+                  <input type="number" id="propNarrow" class="bt-prop-input" min="1" max="5" onchange="btUpdateProp('narrow', this.value)">
+                </div>
+                <div class="bt-prop-row">
+                  <label>Wide:</label>
+                  <input type="number" id="propWide" class="bt-prop-input" min="2" max="10" onchange="btUpdateProp('wide', this.value)">
+                </div>
+              </div>
+            </div>
+
+            <!-- Barcode 2D Properties -->
+            <div id="btPropsBarcode2D" style="display: none; flex-direction: column; gap: 8px;">
+              <div class="bt-section-title">2D Code Parameters</div>
+              <div class="bt-prop-row">
+                <label>Data:</label>
+                <input type="text" id="propBarcode2DData" class="bt-prop-input" oninput="btUpdateProp('content', this.value)">
+              </div>
+              <div class="bt-prop-row">
+                <label>Subtype:</label>
+                <select id="propBarcode2DSubtype" class="bt-prop-input" onchange="btUpdateProp('subtype', this.value)">
+                  <option value="QR">QR Code</option>
+                  <option value="DATAMATRIX">DataMatrix</option>
+                </select>
+              </div>
+              <div class="bt-prop-grid2">
+                <div class="bt-prop-row">
+                  <label>Cell Size:</label>
+                  <input type="number" id="propCellSize" class="bt-prop-input" min="1" max="9" onchange="btUpdateProp('cell_size', this.value)">
+                </div>
+                <div class="bt-prop-row">
+                  <label>ECC:</label>
+                  <select id="propECC" class="bt-prop-input" onchange="btUpdateProp('ecc', this.value)">
+                    <option value="L">L (7%)</option>
+                    <option value="M">M (15%)</option>
+                    <option value="Q">Q (25%)</option>
+                    <option value="H">H (30%)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Line & Box Properties -->
+            <div id="btPropsShape" style="display: none; flex-direction: column; gap: 8px;">
+              <div class="bt-section-title">Shape Stroke</div>
+              <div class="bt-prop-row">
+                <label>Thickness:</label>
+                <input type="number" id="propThickness" class="bt-prop-input" min="1" max="20" onchange="btUpdateProp('thickness', this.value)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Label Page Setup -->
+        <div id="btPaneLabelSetup" style="display: none; flex-direction: column; gap: 10px;">
+          <div class="bt-section-title">Label Presets</div>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <button class="bt-btn" onclick="btApplyPreset(800, 400)">Cartridge: 100 x 50 mm (800x400 dots)</button>
+            <button class="bt-btn" onclick="btApplyPreset(800, 1200)">Outer Box: 100 x 150 mm (800x1200 dots)</button>
+          </div>
+
+          <div class="bt-section-title" style="margin-top: 10px;">Dimensions (<span class="unit-label">mm</span>)</div>
+          <div class="bt-prop-grid2">
+            <div class="bt-prop-row">
+              <label>Width:</label>
+              <input type="number" id="setupWidth" class="bt-prop-input" onchange="btUpdateLabelDim('width', this.value)">
+            </div>
+            <div class="bt-prop-row">
+              <label>Height:</label>
+              <input type="number" id="setupHeight" class="bt-prop-input" onchange="btUpdateLabelDim('height', this.value)">
+            </div>
+          </div>
+
+          <div class="bt-section-title" style="margin-top: 10px;">Argox PPLB Calibration</div>
+          <div class="bt-prop-row">
+            <label>Darkness (D):</label>
+            <input type="number" id="setupDensity" class="bt-prop-input" min="0" max="15" value="8" onchange="btUpdateGlobalParam('density', this.value)">
+          </div>
+          <div class="bt-prop-row">
+            <label>Speed (S):</label>
+            <select id="setupSpeed" class="bt-prop-input" onchange="btUpdateGlobalParam('speed', this.value)">
+              <option value="1">1 ips (High Precision)</option>
+              <option value="2" selected>2 ips (Standard)</option>
+              <option value="3">3 ips (High Speed)</option>
+            </select>
+          </div>
+          <div class="bt-prop-row">
+            <label>Gap Dots (Q):</label>
+            <input type="number" id="setupGap" class="bt-prop-input" value="24" onchange="btUpdateGlobalParam('gap_dots', this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Status & Live PPLB Command Stream Drawer -->
+    <div class="bt-drawer">
+      <div class="bt-drawer-bar">
+        <div>
+          <span>Cursor: <strong id="btCoordCursor">X: 0 mm | Y: 0 mm</strong></span>
+          <span style="margin: 0 8px;">|</span>
+          <span>Selection: <strong id="btCoordSelect">None</strong></span>
+          <span style="margin: 0 8px;">|</span>
+          <span>Elements: <strong id="btElemCount">0</strong></span>
+        </div>
+        <div>
+          <button class="bt-btn" style="padding: 2px 8px; font-size: 11px;" onclick="btCopyPplb()">Copy PPLB</button>
+        </div>
+      </div>
+      <div class="bt-drawer-stream" id="btPplbStream">N&#10;q800&#10;Q400,24&#10;D8&#10;S2&#10;P1</div>
     </div>
   </div>
 
-  <!-- Filter Tabs -->
-  <div class="tabs-nav">
-    <button class="tab-btn active" onclick="switchTab('ALL')">All <span class="badge" id="badgeAll">0</span></button>
-    <button class="tab-btn" onclick="switchTab('BLACK')">Black <span class="badge badge-black" id="badgeBlack">0</span></button>
-    <button class="tab-btn" onclick="switchTab('CYAN')">Cyan <span class="badge badge-cyan" id="badgeCyan">0</span></button>
-    <button class="tab-btn" onclick="switchTab('MAGENTA')">Magenta <span class="badge badge-magenta" id="badgeMagenta">0</span></button>
-    <button class="tab-btn" onclick="switchTab('YELLOW')">Yellow <span class="badge badge-yellow" id="badgeYellow">0</span></button>
-    <button class="tab-btn" onclick="switchTab('OUTER_BOX')">Outer Boxes <span class="badge" id="badgeBox">0</span></button>
+  <!-- Save Label Modal -->
+  <div id="btSaveModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-tag">SAVE LABEL TEMPLATE</span>
+          <h2 class="modal-title">Save .PRD to Storage</h2>
+        </div>
+        <button class="modal-close-btn" onclick="btCloseSaveModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 14px; align-items: stretch; padding: 25px;">
+        <div>
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">Template Filename (.prd):</label>
+          <input type="text" id="saveFilenameInput" class="bt-prop-input" style="width: 100%; font-family: monospace;" placeholder="MY_LABEL_TEMPLATE.prd">
+        </div>
+        <div>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer;">
+            <input type="checkbox" id="saveOverwriteCheck" checked> Overwrite if file exists
+          </label>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+          Saves native 203.2 DPI PPLB commands directly to template storage (`templates/sample_labels/`) and mirrors to persistent SD card backup when mounted.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div></div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-action btn-view-scan" onclick="btCloseSaveModal()">Cancel</button>
+          <button class="btn-action btn-print" onclick="btSubmitSave()">Save .PRD File</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Label Grid Area -->
-  <div class="content-area">
-    <div id="labelsGrid" class="label-grid">
-      <!-- Dynamically filled with BarTender-like cards -->
+  <!-- New Label Modal -->
+  <div id="btNewModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container" style="max-width: 450px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-tag">NEW LABEL</span>
+          <h2 class="modal-title">Create New Label Format</h2>
+        </div>
+        <button class="modal-close-btn" onclick="btCloseNewModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 14px; align-items: stretch; padding: 20px;">
+        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Choose Standard Dimensions:</label>
+        <button class="bt-btn bt-btn-primary" onclick="btCreateNewFromPreset(800, 400, 'Cartridge')">Cartridge Standard (100 x 50 mm / 800 x 400 dots)</button>
+        <button class="bt-btn" onclick="btCreateNewFromPreset(800, 1200, 'Outer Box')">Outer Box Carton (100 x 150 mm / 800 x 1200 dots)</button>
+        <div class="bt-sep" style="width: 100%; height: 1px; margin: 4px 0;"></div>
+        <div class="bt-prop-grid2">
+          <div class="bt-prop-row">
+            <label>Custom W (<span class="unit-label">mm</span>):</label>
+            <input type="number" id="newCustomW" class="bt-prop-input" value="100">
+          </div>
+          <div class="bt-prop-row">
+            <label>Custom H (<span class="unit-label">mm</span>):</label>
+            <input type="number" id="newCustomH" class="bt-prop-input" value="50">
+          </div>
+        </div>
+        <button class="bt-btn" onclick="btCreateCustom()">Create Custom Size</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Existing Completed Thermal Label Preview Modal -->
+  <div id="labelPreviewModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-tag" style="background: #10b981;">COMPLETED LABEL PREVIEW</span>
+          <h2 class="modal-title" id="labelModalTitle">Print Output Preview</h2>
+        </div>
+        <button class="modal-close-btn" onclick="closeLabelModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="background: #121315; padding: 25px 20px;">
+        <div id="labelModalContent"></div>
+        <div style="width: 100%; margin-top: 15px;">
+          <details style="font-size: 12px; color: var(--text-muted); cursor: pointer;">
+            <summary>Inspect Raw PPLB Printer Payload Stream</summary>
+            <div id="labelModalRawPplb" class="pplb-raw-drawer"></div>
+          </details>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-sec-notice" id="labelModalNotice">
+          Argox OS-214: Calibrated for 203.2 DPI continuous thermal transfer output.
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-action btn-print" id="btnLabelModalPrint" onclick="printFromModal()">Dispatch to Printer</button>
+          <button class="btn-action btn-view-scan" onclick="closeLabelModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Existing In-Memory PDF Modal Viewer -->
+  <div id="pdfModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-tag">IN-MEMORY RAM PREVIEW</span>
+          <h2 class="modal-title" id="modalTitle">Scanned Quote Document Preview</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <select id="modalPreviewSelect" class="modal-select" onchange="onSelectPreview(this.value)">
+            <option value="">No Active Previews</option>
+          </select>
+          <button class="modal-close-btn" onclick="closePdfModal()">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div id="modalLoading" class="modal-placeholder" style="display: none;">Loading in-memory scan preview...</div>
+        <div id="modalNoPreview" class="modal-placeholder">No active scan previews in RAM.<br>Scanned quote sheets transmitted via SMTP port 2525 appear here temporarily before dispatch.</div>
+        <img id="pdfPreviewImg" class="modal-img" src="" alt="PDF Scan Preview" style="display: none;" />
+      </div>
+      <div class="modal-footer">
+        <div class="modal-sec-notice">
+          Confidential Shredding: Rendered purely in volatile RAM. Zero data written to non-volatile storage.
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-action btn-delete" id="btnDismissPreview" onclick="dismissCurrentPreview()" style="display: none;">Dismiss &amp; Shred from RAM</button>
+          <button class="btn-action btn-view-scan" onclick="closePdfModal()">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
+    // =========================================================================
+    // GLOBAL APP STATE & MODE SWITCHING
+    // =========================================================================
+    let currentAppMode = 'wms'; // 'wms' or 'designer'
+
+    function switchAppMode(mode) {
+      currentAppMode = mode;
+      const wms = document.getElementById('wmsContainer');
+      const designer = document.getElementById('designerContainer');
+      const btnWms = document.getElementById('btnNavWms');
+      const btnDesigner = document.getElementById('btnNavDesigner');
+
+      if (mode === 'designer') {
+        wms.style.display = 'none';
+        designer.style.display = 'flex';
+        btnWms.classList.remove('active');
+        btnDesigner.classList.add('active');
+        btInitDesigner();
+      } else {
+        wms.style.display = 'block';
+        designer.style.display = 'none';
+        btnWms.classList.add('active');
+        btnDesigner.classList.remove('active');
+      }
+    }
+
+    // =========================================================================
+    // WMS QUEUE ENGINE (PRESERVED)
+    // =========================================================================
     let activeTab = 'BLACK';
     let queueData = { queues: {}, outer_boxes: [] };
+    let activePreviews = [];
+    let currentPreviewId = null;
 
     async function loadData() {
       try {
@@ -146,6 +876,25 @@
         updateUI();
       } catch (err) {
         console.error("Failed to load queue data:", err);
+      }
+      loadPreviews();
+    }
+
+    async function loadPreviews() {
+      try {
+        const res = await fetch('/api/previews');
+        if (res.ok) {
+          const data = await res.json();
+          activePreviews = data.previews || [];
+          const count = activePreviews.length;
+          document.getElementById('previewCountBadge').innerText = count;
+          const dot = document.getElementById('dotPreview');
+          if (dot) {
+            dot.className = count > 0 ? 'dot dot-green' : 'dot dot-gray';
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch previews:", err);
       }
     }
 
@@ -165,13 +914,13 @@
       if (activeTab === 'OUTER_BOX') {
         const count = (queueData.outer_boxes || []).length;
         bannerTitle.innerText = "Outer Boxes (Print 2x)";
-        bannerDesc.innerText = `${count} outer box orders ready. Each order auto-prints 2 copies (front and back).`;
+        bannerDesc.innerText = `${count} outer box orders ready. Each order auto-prints 2 copies (carton front + back).`;
         batchBtn.innerText = `Print All Outer Boxes (${count * 2} Labels)`;
       } else {
         const color = activeTab === 'ALL' ? 'BLACK' : activeTab;
         const jobs = queueData.queues[color] || [];
         const totalQty = jobs.reduce((acc, j) => acc + (j.status === 'PENDING' ? j.quantity : 0), 0);
-        
+
         bannerTitle.innerText = `Active Roll: ${color}`;
         bannerDesc.innerText = `${totalQty} ${color} labels queued for Argox thermal transfer roll.`;
         batchBtn.innerText = `Print ${color} Batch (${totalQty} Labels)`;
@@ -179,42 +928,66 @@
     }
 
     function renderItems() {
-      const grid = document.getElementById('labelsGrid');
-      grid.innerHTML = '';
+      const tableHead = document.getElementById('queueTableHead');
+      const tableBody = document.getElementById('queueTableBody');
+      tableBody.innerHTML = '';
 
       if (activeTab === 'OUTER_BOX') {
+        tableHead.innerHTML = `
+          <tr>
+            <th style="width: 130px;">Box Sequence</th>
+            <th style="width: 130px;">Quote Number</th>
+            <th>Carton Contents Breakdown</th>
+            <th style="width: 130px;">Gross Weight</th>
+            <th style="width: 190px;">Chosen Template</th>
+            <th style="width: 250px; text-align: right;">Actions</th>
+          </tr>
+        `;
+
         const boxes = queueData.outer_boxes || [];
         if (boxes.length === 0) {
-          grid.innerHTML = '<p style="color: #666;">No outer box orders queued.</p>';
+          tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No outer box orders queued in system.</td></tr>';
           return;
         }
+
         boxes.forEach((box, idx) => {
-          const card = document.createElement('div');
-          card.className = 'outer-box-card';
-          card.innerHTML = `
-            <div class="box-header">
-              <span class="box-title">BOX ${box.current_box} OF ${box.total_boxes}</span>
-              <span style="font-weight: bold; color: #a3e635;">WEIGHT: ${box.weight_kg} KG</span>
-            </div>
-            <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px;">Quote: <strong>${box.quote_number}</strong></div>
-            <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; margin-bottom: 12px;">
-              ${box.box_contents.map(c => `
-                <div class="box-item-row">
-                  <span><strong>${c.quantity}x</strong> ${c.unit_type}</span>
-                  <span style="color: #cbd5e1;">${c.model}</span>
-                </div>
-              `).join('')}
-            </div>
-            <div style="display: flex; justify-content: flex-end;">
-              <button class="btn-print-single" onclick="printOuterBox(${idx})">Print 2x Copies (Front and Back)</button>
-            </div>
+          const row = document.createElement('tr');
+          const contentsHtml = box.box_contents.map(c => `
+            <div style="padding: 2px 0;"><strong>${c.quantity}x</strong> ${c.unit_type} (${c.model})</div>
+          `).join('');
+
+          row.innerHTML = `
+            <td><span class="box-badge">BOX ${box.current_box} OF ${box.total_boxes}</span></td>
+            <td><div class="cell-quote">Quote #${box.quote_number}</div></td>
+            <td><div style="font-size: 13px;">${contentsHtml}</div></td>
+            <td><span class="weight-badge">${box.weight_kg ? box.weight_kg + ' KG' : '0.0 KG'}</span></td>
+            <td><span class="template-badge">OUTER_BOX_TEMPLATE.prd</span></td>
+            <td style="text-align: right;">
+              <div class="action-group">
+                <button class="btn-action btn-preview-label" onclick="openLabelPreview('outer_box', '${idx}')" title="Preview completed outer box label">Preview Label</button>
+                <button class="btn-action btn-print" onclick="printOuterBox(${idx})">Print 2x</button>
+                <button class="btn-action btn-view-scan" onclick="openPdfModal('${box.quote_number}')" title="Inspect incoming scan sheet">View Scan</button>
+              </div>
+            </td>
           `;
-          grid.appendChild(card);
+          tableBody.appendChild(row);
         });
         return;
       }
 
-      // Cartridge labels
+      tableHead.innerHTML = `
+        <tr>
+          <th style="width: 90px;">State</th>
+          <th style="width: 75px;">Stock</th>
+          <th style="width: 160px;">Cartridge SKU</th>
+          <th>Description &amp; Annotation</th>
+          <th style="width: 180px;">Chosen Label Template</th>
+          <th style="width: 140px;">Barcode SKU</th>
+          <th style="width: 110px; text-align: center;">Qty</th>
+          <th style="width: 270px; text-align: right;">Actions</th>
+        </tr>
+      `;
+
       let items = [];
       if (activeTab === 'ALL') {
         Object.values(queueData.queues).forEach(q => items.push(...q));
@@ -222,52 +995,112 @@
         items = queueData.queues[activeTab] || [];
       }
 
-      const pending = items.filter(j => j.status === 'PENDING');
+      const pending = items.filter(j => j.status === 'PENDING' || j.status === 'HELD');
       if (pending.length === 0) {
-        grid.innerHTML = `<p style="color: #666;">No pending labels in ${activeTab}.</p>`;
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">No queued labels in ${activeTab} stock.</td></tr>`;
         return;
       }
 
       pending.forEach(job => {
-        const card = document.createElement('div');
-        card.className = 'label-card';
-        card.innerHTML = `
-          <div class="label-header">
-            <span>Quote: ${job.quote_number}</span>
-            <span style="color: var(--accent); font-weight: bold;">${job.color_group}</span>
-          </div>
-          <div class="label-preview-box">
-            <div>
-              <div class="label-title">${job.item_name}</div>
-              <div class="label-desc">${job.description || ''}</div>
-              ${job.handwritten_note ? `<div class="label-note">Note: ${job.handwritten_note}</div>` : ''}
+        const row = document.createElement('tr');
+        if (job.status === 'HELD') row.className = 'row-held';
+
+        const stateBadgeClass = job.status === 'HELD' ? 'state-held' : 'state-queued';
+        const colorBadgeClass = `badge-${(job.color_group || 'black').toLowerCase()}`;
+        const barcodeText = (job.matched_label_file || job.item_name).replace(/\.(prn|prd)$/i, '');
+        const matchedTemplateName = job.matched_label_file || 'CARTRIDGE_PARAMETRIC.prd';
+
+        row.innerHTML = `
+          <td><span class="state-badge ${stateBadgeClass}">${job.status}</span></td>
+          <td><span class="badge ${colorBadgeClass}">${job.color_group}</span></td>
+          <td>
+            <div class="cell-sku" style="font-weight: 700; color: #fff;">${job.item_name}</div>
+            <div class="cell-quote" style="font-size: 11px;">Quote #${job.quote_number}</div>
+          </td>
+          <td>
+            <div class="cell-desc">${job.description || job.item_name}</div>
+            ${job.handwritten_note ? `<div class="cell-annotation">Note: ${job.handwritten_note}</div>` : ''}
+          </td>
+          <td>
+            <span class="template-badge" title="Resolved on-disk template">${matchedTemplateName}</span>
+          </td>
+          <td>
+            <div class="barcode-cell">
+              <span class="barcode-code">${barcodeText}</span>
             </div>
-            <div class="label-barcode-mock"></div>
-          </div>
-          <div class="label-controls">
+          </td>
+          <td style="text-align: center;">
             <div class="qty-stepper">
               <button class="qty-btn" onclick="adjustQty('${job.id}', -1)">-</button>
               <input class="qty-input" id="qty-${job.id}" type="text" value="${job.quantity}">
               <button class="qty-btn" onclick="adjustQty('${job.id}', 1)">+</button>
             </div>
-            <button class="btn-print-single" onclick="printSingleJob('${job.id}')">Print (${job.quantity})</button>
-          </div>
+          </td>
+          <td>
+            <div class="action-group">
+              <button class="btn-action btn-preview-label" onclick="openLabelPreview('cartridge', '${job.id}')" title="Preview completed thermal label">Preview Label</button>
+              <button class="btn-action btn-print" onclick="printSingleJob('${job.id}')">Print</button>
+              <button class="btn-action btn-hold" onclick="toggleHoldJob('${job.id}')">${job.status === 'HELD' ? 'Resume' : 'Hold'}</button>
+              <button class="btn-action btn-view-scan" onclick="openPdfModal('${job.quote_number}')" title="Inspect incoming scan sheet">View Scan</button>
+            </div>
+          </td>
         `;
-        grid.appendChild(card);
+        tableBody.appendChild(row);
       });
     }
 
     function updateUI() {
-      // Update badges
       let totalAll = 0;
       ['BLACK', 'CYAN', 'MAGENTA', 'YELLOW'].forEach(c => {
         const q = queueData.queues[c] || [];
         const count = q.reduce((acc, j) => acc + (j.status === 'PENDING' ? j.quantity : 0), 0);
         totalAll += count;
-        document.getElementById(`badge${c.charAt(0) + c.slice(1).toLowerCase()}`).innerText = count;
+        const el = document.getElementById(`badge${c.charAt(0) + c.slice(1).toLowerCase()}`);
+        if (el) el.innerText = count;
       });
       document.getElementById('badgeAll').innerText = totalAll;
       document.getElementById('badgeBox').innerText = (queueData.outer_boxes || []).length;
+
+      if (queueData.hardware) {
+        const p = queueData.hardware.printer;
+        const pDot = document.getElementById('dotPrinter');
+        const pText = document.getElementById('textPrinter');
+        if (p.connected) {
+          pDot.className = 'dot dot-green';
+          pText.innerText = `Argox OS-214: Online (${p.device})`;
+        } else if (p.simulation) {
+          pDot.className = 'dot dot-yellow';
+          pText.innerText = 'Argox: [SIMULATION - HARDWARE BYPASSED]';
+        } else {
+          pDot.className = 'dot dot-red';
+          pText.innerText = `Argox: Disconnected (${p.device} missing)`;
+        }
+
+        const s = queueData.hardware.scanner;
+        const sDot = document.getElementById('dotScanner');
+        const sText = document.getElementById('textScanner');
+        if (s.reachable) {
+          sDot.className = 'dot dot-green';
+          sText.innerText = `Scanner: Online (${s.ip})`;
+        } else if (s.carrier) {
+          sDot.className = 'dot dot-yellow';
+          sText.innerText = `Scanner: Cable Linked (${s.ip} not pinging)`;
+        } else {
+          sDot.className = 'dot dot-red';
+          sText.innerText = 'Scanner: No Cable Link (Port 2525 Ready)';
+        }
+
+        const g = queueData.hardware.gemini;
+        const gDot = document.getElementById('dotGemini');
+        const gText = document.getElementById('textGemini');
+        if (g && g.active_keys > 0) {
+          gDot.className = 'dot dot-green';
+          gText.innerText = `Extraction Engine: ${g.active_keys}/${g.total_keys} Keys Ready`;
+        } else {
+          gDot.className = 'dot dot-yellow';
+          gText.innerText = 'Extraction Engine: Checking Pool...';
+        }
+      }
 
       renderItems();
       updateBanner();
@@ -285,7 +1118,7 @@
 
     async function printSingleJob(jobId) {
       const qtyInput = document.getElementById(`qty-${jobId}`);
-      const qty = parseInt(qtyInput.value) || 1;
+      const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
       await fetch('/api/print/job', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -305,13 +1138,1393 @@
 
     function adjustQty(jobId, delta) {
       const input = document.getElementById(`qty-${jobId}`);
+      if (!input) return;
       let val = parseInt(input.value) || 1;
       val = Math.max(1, val + delta);
       input.value = val;
     }
 
-    setInterval(loadData, 3000);
-    window.onload = loadData;
+    function toggleHoldJob(jobId) {
+      for (const color in queueData.queues) {
+        for (const j of queueData.queues[color]) {
+          if (j.id === jobId) {
+            j.status = j.status === 'HELD' ? 'PENDING' : 'HELD';
+            renderItems();
+            return;
+          }
+        }
+      }
+    }
+
+    function approvePending() {
+      const banner = document.getElementById('alertBanner');
+      if (banner) banner.style.display = 'none';
+      alert('Ambiguity approved by operator.');
+    }
+
+    async function openPdfModal(targetQuoteId) {
+      const modal = document.getElementById('pdfModal');
+      const select = document.getElementById('modalPreviewSelect');
+      const img = document.getElementById('pdfPreviewImg');
+      const loading = document.getElementById('modalLoading');
+      const noPreview = document.getElementById('modalNoPreview');
+      const btnDismiss = document.getElementById('btnDismissPreview');
+
+      modal.style.display = 'flex';
+      loading.style.display = 'block';
+      noPreview.style.display = 'none';
+      img.style.display = 'none';
+      btnDismiss.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/previews');
+        const data = await res.json();
+        activePreviews = data.previews || [];
+
+        select.innerHTML = '';
+        if (activePreviews.length === 0) {
+          loading.style.display = 'none';
+          noPreview.style.display = 'block';
+          select.innerHTML = '<option value="">No Active Previews</option>';
+          return;
+        }
+
+        activePreviews.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.quote_id;
+          opt.innerText = `Quote Sheet: ${p.quote_id}`;
+          select.appendChild(opt);
+        });
+
+        let selectedId = activePreviews[0].quote_id;
+        if (targetQuoteId) {
+          const match = activePreviews.find(p => p.quote_id === targetQuoteId || p.quote_id.startsWith(targetQuoteId));
+          if (match) selectedId = match.quote_id;
+        }
+
+        select.value = selectedId;
+        await loadPreviewImage(selectedId);
+      } catch (err) {
+        loading.style.display = 'none';
+        noPreview.style.display = 'block';
+        noPreview.innerText = `Failed to load previews: ${err.message}`;
+      }
+    }
+
+    let modalPrintAction = null;
+
+    async function openLabelPreview(type, identifier) {
+      const modal = document.getElementById('labelPreviewModal');
+      const titleEl = document.getElementById('labelModalTitle');
+      const contentEl = document.getElementById('labelModalContent');
+      const rawEl = document.getElementById('labelModalRawPplb');
+      const printBtn = document.getElementById('btnLabelModalPrint');
+
+      modal.style.display = 'flex';
+      contentEl.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 40px;">Compiling completed thermal label preview...</div>';
+      rawEl.innerText = '';
+
+      try {
+        let url = '';
+        if (type === 'outer_box') {
+          url = `/api/preview/label?type=outer_box&index=${encodeURIComponent(identifier)}`;
+          modalPrintAction = () => { printOuterBox(parseInt(identifier)); closeLabelModal(); };
+          printBtn.innerText = 'Print 2x Outer Box Labels';
+        } else {
+          const qtyInput = document.getElementById(`qty-${identifier}`);
+          const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+          url = `/api/preview/label?type=cartridge&job_id=${encodeURIComponent(identifier)}&quantity=${qty}`;
+          modalPrintAction = () => { printSingleJob(identifier); closeLabelModal(); };
+          printBtn.innerText = `Print ${qty} Cartridge Label${qty > 1 ? 's' : ''}`;
+        }
+
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.status !== 'success' || !data.preview) {
+          contentEl.innerHTML = `<div style="color: #f87171; text-align: center; padding: 20px;">Failed to render preview: ${data.message || 'Unknown error'}</div>`;
+          return;
+        }
+
+        const p = data.preview;
+        rawEl.innerText = p.pplb_payload || '';
+
+        if (p.type === 'OUTER_BOX') {
+          titleEl.innerText = `Outer Box: ${p.box_banner}`;
+          contentEl.innerHTML = `
+            <div class="thermal-card thermal-card-outerbox">
+              <span class="thermal-spec-badge">${p.dimensions}</span>
+              <div class="thermal-title" style="font-size: 20px; text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px;">
+                ${p.box_banner}
+              </div>
+              <div class="thermal-manifest" style="margin-top: 15px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #444; margin-bottom: 6px;">CARTON CONTENTS MANIFEST:</div>
+                ${(p.manifest || []).map(m => `<div class="thermal-manifest-item">- ${m}</div>`).join('')}
+              </div>
+              <div class="thermal-divider" style="margin-top: 25px;"></div>
+              <div class="thermal-barcode-box">
+                <div class="thermal-barcode-stripes" style="height: 55px;"></div>
+                <div class="thermal-barcode-val">${p.barcode}</div>
+              </div>
+              <div class="thermal-footer-row" style="margin-top: 20px;">
+                <span>${p.quote_number}</span>
+                <span style="font-size: 13px;">${p.weight_text}</span>
+              </div>
+              <div style="text-align: center; font-size: 10px; font-weight: 700; margin-top: 10px; color: #333;">
+                DISPATCH RUN: ${p.copies} COPIES (FRONT &amp; SIDE OF CARTON)
+              </div>
+            </div>
+          `;
+        } else {
+          titleEl.innerText = `Cartridge Label: ${p.title}`;
+          contentEl.innerHTML = `
+            <div class="thermal-card thermal-card-cartridge">
+              <span class="thermal-spec-badge">${p.dimensions}</span>
+              <div class="thermal-title">${p.title}</div>
+              <div class="thermal-subtitle">${p.subtitle}</div>
+              ${p.note ? `<div class="thermal-note">Annotation: ${p.note}</div>` : ''}
+              <div class="thermal-barcode-box">
+                <div class="thermal-barcode-stripes"></div>
+                <div class="thermal-barcode-val">${p.barcode}</div>
+              </div>
+              <div class="thermal-footer-row">
+                <span>QUOTE: ${p.quote_number || 'N/A'}</span>
+                <span>QTY: ${p.quantity} LABELS</span>
+                <span>ARGOX OS-214</span>
+              </div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        contentEl.innerHTML = `<div style="color: #f87171; text-align: center; padding: 20px;">Preview Error: ${err.message}</div>`;
+      }
+    }
+
+    function closeLabelModal() {
+      document.getElementById('labelPreviewModal').style.display = 'none';
+      modalPrintAction = null;
+    }
+
+    function printFromModal() {
+      if (typeof modalPrintAction === 'function') {
+        modalPrintAction();
+      }
+    }
+
+    async function loadPreviewImage(quoteId) {
+      currentPreviewId = quoteId;
+      const img = document.getElementById('pdfPreviewImg');
+      const loading = document.getElementById('modalLoading');
+      const noPreview = document.getElementById('modalNoPreview');
+      const btnDismiss = document.getElementById('btnDismissPreview');
+
+      loading.style.display = 'block';
+      img.style.display = 'none';
+      noPreview.style.display = 'none';
+
+      try {
+        const res = await fetch(`/api/preview/${encodeURIComponent(quoteId)}`);
+        if (!res.ok) {
+          loading.style.display = 'none';
+          noPreview.style.display = 'block';
+          noPreview.innerText = `Preview for '${quoteId}' not found or already shredded.`;
+          btnDismiss.style.display = 'none';
+          return;
+        }
+
+        const data = await res.json();
+        img.src = data.preview;
+        img.onload = () => {
+          loading.style.display = 'none';
+          img.style.display = 'block';
+          btnDismiss.style.display = 'inline-block';
+        };
+      } catch (err) {
+        loading.style.display = 'none';
+        noPreview.style.display = 'block';
+        noPreview.innerText = `Error loading preview: ${err.message}`;
+      }
+    }
+
+    function onSelectPreview(quoteId) {
+      if (quoteId) loadPreviewImage(quoteId);
+    }
+
+    async function dismissCurrentPreview() {
+      if (!currentPreviewId) return;
+      try {
+        await fetch(`/api/preview/${encodeURIComponent(currentPreviewId)}/dismiss`, { method: 'POST' });
+        loadPreviews();
+        openPdfModal();
+      } catch (err) {
+        alert(`Failed to dismiss preview: ${err.message}`);
+      }
+    }
+
+    function closePdfModal() {
+      document.getElementById('pdfModal').style.display = 'none';
+    }
+
+    // =========================================================================
+    // BARTENDER INDUSTRIAL WYSIWYG DESIGNER ENGINE
+    // =========================================================================
+    const DOTS_PER_MM = 8.0;
+    const DOTS_PER_INCH = 203.2;
+
+    const btState = {
+      filename: "CANON_716_BLACK.prd",
+      width_dots: 800,
+      height_dots: 400,
+      density: 8,
+      speed: 2,
+      gap_dots: 24,
+      copies: 1,
+      elements: [],
+      selectedId: null,
+      zoom: 1.0,
+      unit: "mm",
+      snapGrid: true,
+      snapDots: 8, // 1mm = 8 dots
+      showGrid: true,
+      history: [],
+      redoStack: []
+    };
+
+    let btInitialized = false;
+    let btDragging = false;
+    let btResizing = false;
+    let btResizeHandle = null;
+    let btDragStartX = 0;
+    let btDragStartY = 0;
+    let btElemStartGeo = { x: 0, y: 0, width: 0, height: 0 };
+
+    function btInitDesigner() {
+      if (btInitialized) return;
+      btInitialized = true;
+      btLoadTemplateList();
+      btSetupCanvasListeners();
+      btSetupKeyboardListeners();
+      btApplyPreset(800, 400); // Default Cartridge
+
+      // Auto-load CB540A_BLACK.prd or first available
+      setTimeout(() => {
+        const sel = document.getElementById('btTemplateSelect');
+        if (sel && sel.options.length > 0) {
+          for (let i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value.includes('CB540A') || sel.options[i].value.includes('CANON')) {
+              sel.selectedIndex = i;
+              btLoadSelectedTemplate();
+              break;
+            }
+          }
+        }
+      }, 500);
+    }
+
+    // Coordinates conversion
+    function btDotsToDisplay(dots) {
+      if (btState.unit === "in") return (dots / DOTS_PER_INCH).toFixed(2);
+      if (btState.unit === "dots") return Math.round(dots);
+      return (dots / DOTS_PER_MM).toFixed(1); // mm default
+    }
+
+    function btDisplayToDots(val) {
+      const v = parseFloat(val) || 0;
+      if (btState.unit === "in") return Math.round(v * DOTS_PER_INCH);
+      if (btState.unit === "dots") return Math.round(v);
+      return Math.round(v * DOTS_PER_MM); // mm default
+    }
+
+    function btSaveHistory() {
+      const snapshot = JSON.stringify({
+        width_dots: btState.width_dots,
+        height_dots: btState.height_dots,
+        density: btState.density,
+        speed: btState.speed,
+        gap_dots: btState.gap_dots,
+        copies: btState.copies,
+        elements: btState.elements
+      });
+      btState.history.push(snapshot);
+      if (btState.history.length > 30) btState.history.shift();
+      btState.redoStack = [];
+      btUpdateLivePplb();
+    }
+
+    function btUndo() {
+      if (btState.history.length === 0) return;
+      const current = JSON.stringify({
+        width_dots: btState.width_dots,
+        height_dots: btState.height_dots,
+        density: btState.density,
+        speed: btState.speed,
+        gap_dots: btState.gap_dots,
+        copies: btState.copies,
+        elements: btState.elements
+      });
+      btState.redoStack.push(current);
+      const prev = JSON.parse(btState.history.pop());
+      btState.width_dots = prev.width_dots;
+      btState.height_dots = prev.height_dots;
+      btState.density = prev.density;
+      btState.speed = prev.speed;
+      btState.gap_dots = prev.gap_dots;
+      btState.copies = prev.copies;
+      btState.elements = prev.elements;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    function btRedo() {
+      if (btState.redoStack.length === 0) return;
+      const next = JSON.parse(btState.redoStack.pop());
+      btSaveHistory();
+      btState.width_dots = next.width_dots;
+      btState.height_dots = next.height_dots;
+      btState.density = next.density;
+      btState.speed = next.speed;
+      btState.gap_dots = next.gap_dots;
+      btState.copies = next.copies;
+      btState.elements = next.elements;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    // Template Operations
+    async function btLoadTemplateList() {
+      const sel = document.getElementById('btTemplateSelect');
+      try {
+        const res = await fetch('/api/designer/templates');
+        const data = await res.json();
+        sel.innerHTML = '';
+        (data.templates || []).forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.filename;
+          opt.innerText = `${t.filename} (${t.type.toUpperCase()})`;
+          sel.appendChild(opt);
+        });
+      } catch (err) {
+        sel.innerHTML = '<option value="">Error loading templates</option>';
+      }
+    }
+
+    async function btLoadSelectedTemplate() {
+      const sel = document.getElementById('btTemplateSelect');
+      const filename = sel.value;
+      if (!filename) return;
+
+      try {
+        const res = await fetch(`/api/designer/template?file=${encodeURIComponent(filename)}`);
+        const data = await res.json();
+        if (data.status !== 'success') {
+          alert(`Failed to load template: ${data.message}`);
+          return;
+        }
+
+        btSaveHistory();
+        btState.filename = data.filename;
+        const ast = data.ast || {};
+        btState.width_dots = ast.width_dots || 800;
+        btState.height_dots = ast.height_dots || 400;
+        btState.density = ast.density || 8;
+        btState.speed = ast.speed || 2;
+        btState.gap_dots = ast.gap_dots || 24;
+        btState.copies = ast.copies || 1;
+
+        // Synchronize page setup inputs with template dimensions
+        const setupW = document.getElementById('setupWidth');
+        const setupH = document.getElementById('setupHeight');
+        if (setupW) setupW.value = btDotsToDisplay(btState.width_dots);
+        if (setupH) setupH.value = btDotsToDisplay(btState.height_dots);
+
+        btState.elements = (ast.elements || []).map((e, idx) => {
+          return {
+            id: `elem_${Date.now()}_${idx}`,
+            type: e.type || 'text',
+            x: e.x || 0,
+            y: e.y || 0,
+            width: e.width || btEstimateElementWidth(e),
+            height: e.height || btEstimateElementHeight(e),
+            rotation: e.rotation || 0,
+            content: e.content || '',
+            font: e.font || 3,
+            font_family: e.font_family || "'Courier New', Courier, monospace",
+            h_mult: e.h_mult || 1,
+            v_mult: e.v_mult || 1,
+            reverse: !!e.reverse,
+            barcode_type: e.barcode_type || '1',
+            narrow: e.narrow || 2,
+            wide: e.wide || 5,
+            hri: e.hri || 'B',
+            subtype: e.subtype || 'QR',
+            model: e.model || 2,
+            cell_size: e.cell_size || 4,
+            ecc: e.ecc || 'M',
+            thickness: e.thickness || 2
+          };
+        });
+
+        btState.selectedId = null;
+        btRenderBoard();
+        btUpdateInspector();
+        btUpdateLivePplb();
+      } catch (err) {
+        alert(`Error opening template: ${err.message}`);
+      }
+    }
+
+    function btEstimateElementWidth(e) {
+      if (e.width) return e.width;
+      if (e.type === 'text') {
+        const fontWidths = { 1: 8, 2: 10, 3: 12, 4: 14, 5: 32 };
+        const charW = (fontWidths[e.font || 3] || 12) * (e.h_mult || 1);
+        return Math.max(30, (e.content || '').length * charW);
+      }
+      if (e.type === 'barcode_1d') {
+        const len = (e.content || '123456').length;
+        const narrow = e.narrow || 2;
+        return Math.max(120, len * narrow * 11 + 40);
+      }
+      if (e.type === 'barcode_2d') {
+        return (e.cell_size || 4) * 25;
+      }
+      if (e.type === 'line' || e.type === 'box') return 700;
+      return 150;
+    }
+
+    function btEstimateElementHeight(e) {
+      if (e.height) return e.height;
+      if (e.type === 'text') {
+        const fontHeights = { 1: 12, 2: 16, 3: 20, 4: 24, 5: 48 };
+        return (fontHeights[e.font || 3] || 20) * (e.v_mult || 1);
+      }
+      if (e.type === 'barcode_1d') return e.height || 60;
+      if (e.type === 'barcode_2d') return (e.cell_size || 4) * 25;
+      if (e.type === 'line') return 4;
+      if (e.type === 'box') return 300;
+      return 30;
+    }
+
+    // Modal Triggers
+    function btOpenNewModal() { document.getElementById('btNewModal').style.display = 'flex'; }
+    function btCloseNewModal() { document.getElementById('btNewModal').style.display = 'none'; }
+    function btOpenSaveModal() {
+      document.getElementById('saveFilenameInput').value = btState.filename || 'MY_CUSTOM_LABEL.prd';
+      document.getElementById('btSaveModal').style.display = 'flex';
+    }
+    function btCloseSaveModal() { document.getElementById('btSaveModal').style.display = 'none'; }
+
+    function btCreateNewFromPreset(w, h, name) {
+      btSaveHistory();
+      btState.filename = `UNTITLED_${name.toUpperCase().replace(/\s+/g, '_')}.prd`;
+      btApplyPreset(w, h);
+      btState.elements = [];
+      btState.selectedId = null;
+      btCloseNewModal();
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    function btCreateCustom() {
+      const wDots = btDisplayToDots(document.getElementById('newCustomW').value) || 800;
+      const hDots = btDisplayToDots(document.getElementById('newCustomH').value) || 400;
+      btSaveHistory();
+      btState.filename = "CUSTOM_LABEL.prd";
+      btApplyPreset(wDots, hDots);
+      btState.elements = [];
+      btState.selectedId = null;
+      btCloseNewModal();
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    async function btSubmitSave() {
+      const filename = document.getElementById('saveFilenameInput').value.trim();
+      const overwrite = document.getElementById('saveOverwriteCheck').checked;
+      if (!filename) {
+        alert("Please enter a filename.");
+        return;
+      }
+
+      const astData = btExportAST();
+      try {
+        const res = await fetch('/api/designer/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: filename,
+            ast: astData,
+            overwrite: overwrite
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          btState.filename = data.filename;
+          btCloseSaveModal();
+          btLoadTemplateList();
+          alert(`Success: ${data.message}`);
+        } else {
+          alert(`Save Failed: ${data.message}`);
+        }
+      } catch (err) {
+        alert(`Network Error saving label: ${err.message}`);
+      }
+    }
+
+    async function btTestPrint() {
+      const qty = parseInt(document.getElementById('btPrintQty').value) || 1;
+      const astData = btExportAST();
+
+      try {
+        const res = await fetch('/api/designer/test_print', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ast: astData,
+            quantity: qty
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          const simNote = data.simulation ? " (Simulation Mode - Hardware Bypassed)" : " (/dev/usb/lp0)";
+          alert(`Print Dispatched: ${data.message}${simNote}`);
+        } else {
+          alert(`Print Failed: ${data.message}`);
+        }
+      } catch (err) {
+        alert(`Test Print Error: ${err.message}`);
+      }
+    }
+
+    function btExportAST() {
+      return {
+        width_dots: btState.width_dots,
+        height_dots: btState.height_dots,
+        density: btState.density,
+        speed: btState.speed,
+        gap_dots: btState.gap_dots,
+        copies: btState.copies,
+        elements: btState.elements.map(e => {
+          const clean = {
+            type: e.type,
+            x: Math.round(e.x),
+            y: Math.round(e.y),
+            rotation: e.rotation || 0
+          };
+          if (e.type === 'text') {
+            clean.content = e.content;
+            clean.font = parseInt(e.font) || 3;
+            clean.font_family = e.font_family || "'Courier New', Courier, monospace";
+            clean.h_mult = parseInt(e.h_mult) || 1;
+            clean.v_mult = parseInt(e.v_mult) || 1;
+            clean.reverse = !!e.reverse;
+          } else if (e.type === 'barcode_1d') {
+            clean.content = e.content;
+            clean.barcode_type = String(e.barcode_type || '1');
+            clean.narrow = parseInt(e.narrow) || 2;
+            clean.wide = parseInt(e.wide) || 5;
+            clean.height = Math.round(e.height || 60);
+            clean.hri = String(e.hri || 'B');
+          } else if (e.type === 'barcode_2d') {
+            clean.content = e.content;
+            clean.subtype = String(e.subtype || 'QR');
+            clean.model = parseInt(e.model) || 2;
+            clean.cell_size = parseInt(e.cell_size) || 4;
+            clean.ecc = String(e.ecc || 'M');
+          } else if (e.type === 'line') {
+            clean.width = Math.round(e.width || 700);
+            clean.height = Math.round(e.height || e.thickness || 4);
+          } else if (e.type === 'box') {
+            clean.width = Math.round(e.width || 700);
+            clean.height = Math.round(e.height || 300);
+            clean.thickness = Math.round(e.thickness || 2);
+          }
+          return clean;
+        })
+      };
+    }
+
+    // Canvas Rendering & Display
+    function btApplyPreset(w, h) {
+      btState.width_dots = w;
+      btState.height_dots = h;
+      document.getElementById('setupWidth').value = btDotsToDisplay(w);
+      document.getElementById('setupHeight').value = btDotsToDisplay(h);
+      btRenderBoard();
+      btDrawRulers();
+    }
+
+    function btRenderBoard() {
+      const board = document.getElementById('btLabelPaper');
+      board.style.width = `${btState.width_dots}px`;
+      board.style.height = `${btState.height_dots}px`;
+      board.style.transform = `scale(${btState.zoom})`;
+      board.style.backgroundImage = btState.showGrid ? 'radial-gradient(#d1d5db 1px, transparent 1px)' : 'none';
+
+      board.innerHTML = '';
+      btState.elements.forEach(elem => {
+        const div = document.createElement('div');
+        div.className = `bt-elem ${elem.id === btState.selectedId ? 'selected' : ''}`;
+        div.id = elem.id;
+        div.style.left = `${elem.x}px`;
+        div.style.top = `${elem.y}px`;
+        div.style.width = `${elem.width}px`;
+        div.style.height = `${elem.height}px`;
+
+        if (elem.rotation) {
+          div.style.transform = `rotate(${elem.rotation * 90}deg)`;
+        }
+
+        // Render Inner Content
+        if (elem.type === 'text') {
+          const fontSizes = { 1: 12, 2: 16, 3: 20, 4: 24, 5: 48 };
+          const baseSize = fontSizes[elem.font] || 20;
+          div.className += ` bt-elem-text ${elem.reverse ? 'reverse' : ''}`;
+          div.style.fontSize = `${baseSize}px`;
+          div.style.fontFamily = elem.font_family || "'Courier New', Courier, monospace";
+          div.style.transform = (div.style.transform || '') + ` scale(${elem.h_mult || 1}, ${elem.v_mult || 1})`;
+          div.style.transformOrigin = 'top left';
+          div.innerText = elem.content || 'Sample Text';
+        } else if (elem.type === 'barcode_1d') {
+          div.className += ' bt-elem-barcode';
+          const hriTop = (elem.hri === 'T');
+          const hriBot = (elem.hri === 'B' || !elem.hri);
+          const hriHtml = `<div style="font-size: 11px; font-family: monospace; font-weight: bold; margin: 2px 0;">${elem.content}</div>`;
+          div.innerHTML = `
+            ${hriTop ? hriHtml : ''}
+            <svg class="bt-barcode-svg" preserveAspectRatio="none" viewBox="0 0 100 40">
+              <defs>
+                <pattern id="pat_${elem.id}" width="8" height="40" patternUnits="userSpaceOnUse">
+                  <rect x="0" width="2" height="40" fill="#000"/>
+                  <rect x="4" width="3" height="40" fill="#000"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#pat_${elem.id})"/>
+            </svg>
+            ${hriBot ? hriHtml : ''}
+          `;
+        } else if (elem.type === 'barcode_2d') {
+          div.className += ' bt-elem-barcode';
+          div.innerHTML = `
+            <svg width="100%" height="100%" viewBox="0 0 40 40">
+              <rect width="40" height="40" fill="#fff"/>
+              <rect x="2" y="2" width="12" height="12" fill="#000"/>
+              <rect x="4" y="4" width="8" height="8" fill="#fff"/>
+              <rect x="6" y="6" width="4" height="4" fill="#000"/>
+              <rect x="26" y="2" width="12" height="12" fill="#000"/>
+              <rect x="28" y="4" width="8" height="8" fill="#fff"/>
+              <rect x="30" y="6" width="4" height="4" fill="#000"/>
+              <rect x="2" y="26" width="12" height="12" fill="#000"/>
+              <rect x="4" y="28" width="8" height="8" fill="#fff"/>
+              <rect x="6" y="30" width="4" height="4" fill="#000"/>
+              <rect x="18" y="18" width="6" height="6" fill="#000"/>
+              <rect x="18" y="26" width="4" height="4" fill="#000"/>
+              <rect x="26" y="18" width="4" height="4" fill="#000"/>
+            </svg>
+          `;
+        } else if (elem.type === 'line') {
+          div.className += ' bt-elem-line';
+        } else if (elem.type === 'box') {
+          div.className += ' bt-elem-box';
+          div.style.borderWidth = `${elem.thickness || 2}px`;
+        }
+
+        // Add 8 resize handles + rotation handle if selected
+        if (elem.id === btState.selectedId) {
+          ['nw','n','ne','e','se','s','sw','w'].forEach(h => {
+            const hDiv = document.createElement('div');
+            hDiv.className = `bt-handle bt-handle-${h}`;
+            hDiv.dataset.handle = h;
+            div.appendChild(hDiv);
+          });
+          const rotHandle = document.createElement('div');
+          rotHandle.className = 'bt-handle bt-handle-rot';
+          rotHandle.dataset.handle = 'rot';
+          rotHandle.title = 'Click to Rotate 90 deg';
+          div.appendChild(rotHandle);
+        }
+
+        board.appendChild(div);
+      });
+
+      document.getElementById('btElemCount').innerText = btState.elements.length;
+      btDrawRulers();
+    }
+
+    // Ruler Drawing
+    function btDrawRulers() {
+      const svgH = document.getElementById('svgRulerH');
+      const svgV = document.getElementById('svgRulerV');
+      if (!svgH || !svgV) return;
+
+      const wDots = btState.width_dots;
+      const hDots = btState.height_dots;
+      const zoom = btState.zoom;
+      const offset = 30; // Matches padding of .bt-canvas-scroll for exact zero-point alignment
+
+      svgH.setAttribute('width', Math.max(wDots * zoom + offset + 100, 2000));
+      svgV.setAttribute('height', Math.max(hDots * zoom + offset + 100, 2000));
+
+      let linesH = '';
+      let linesV = '';
+
+      if (btState.unit === "in") {
+        const eighthDots = DOTS_PER_INCH / 8.0;
+        const totalStepsH = Math.ceil((wDots / DOTS_PER_INCH) * 8);
+        for (let s = 0; s <= totalStepsH + 8; s++) {
+          const x = offset + (s * eighthDots * zoom);
+          const isInch = (s % 8 === 0);
+          const isHalf = (s % 4 === 0);
+          const isQuarter = (s % 2 === 0);
+          const y2 = isInch ? 0 : (isHalf ? 8 : (isQuarter ? 14 : 18));
+          linesH += `<line x1="${x}" y1="24" x2="${x}" y2="${y2}" stroke="#585b62" stroke-width="1"/>`;
+          if (isInch) {
+            const inchNum = s / 8;
+            linesH += `<text x="${x + 2}" y="10" fill="#8e9297" font-size="9" font-family="monospace">${inchNum}"</text>`;
+          }
+        }
+
+        const totalStepsV = Math.ceil((hDots / DOTS_PER_INCH) * 8);
+        for (let s = 0; s <= totalStepsV + 8; s++) {
+          const y = offset + (s * eighthDots * zoom);
+          const isInch = (s % 8 === 0);
+          const isHalf = (s % 4 === 0);
+          const isQuarter = (s % 2 === 0);
+          const x2 = isInch ? 0 : (isHalf ? 8 : (isQuarter ? 14 : 18));
+          linesV += `<line x1="24" y1="${y}" x2="${x2}" y2="${y}" stroke="#585b62" stroke-width="1"/>`;
+          if (isInch) {
+            const inchNum = s / 8;
+            linesV += `<text x="2" y="${y + 9}" fill="#8e9297" font-size="8" font-family="monospace">${inchNum}"</text>`;
+          }
+        }
+      } else if (btState.unit === "dots") {
+        const totalDotsH = Math.ceil(wDots / 20) * 20;
+        for (let d = 0; d <= totalDotsH + 200; d += 20) {
+          const x = offset + (d * zoom);
+          const is100 = (d % 100 === 0);
+          const is50 = (d % 50 === 0);
+          const y2 = is100 ? 0 : (is50 ? 10 : 16);
+          linesH += `<line x1="${x}" y1="24" x2="${x}" y2="${y2}" stroke="#585b62" stroke-width="1"/>`;
+          if (is100) {
+            linesH += `<text x="${x + 2}" y="10" fill="#8e9297" font-size="9" font-family="monospace">${d}</text>`;
+          }
+        }
+
+        const totalDotsV = Math.ceil(hDots / 20) * 20;
+        for (let d = 0; d <= totalDotsV + 200; d += 20) {
+          const y = offset + (d * zoom);
+          const is100 = (d % 100 === 0);
+          const is50 = (d % 50 === 0);
+          const x2 = is100 ? 0 : (is50 ? 10 : 16);
+          linesV += `<line x1="24" y1="${y}" x2="${x2}" y2="${y}" stroke="#585b62" stroke-width="1"/>`;
+          if (is100) {
+            linesV += `<text x="2" y="${y + 9}" fill="#8e9297" font-size="8" font-family="monospace">${d}</text>`;
+          }
+        }
+      } else {
+        // Millimeters (default)
+        const totalMmH = Math.ceil(wDots / DOTS_PER_MM);
+        for (let mm = 0; mm <= totalMmH + 10; mm++) {
+          const x = offset + (mm * DOTS_PER_MM * zoom);
+          const is10 = (mm % 10 === 0);
+          const is5 = (mm % 5 === 0);
+          const y2 = is10 ? 0 : (is5 ? 10 : 16);
+          linesH += `<line x1="${x}" y1="24" x2="${x}" y2="${y2}" stroke="#585b62" stroke-width="1"/>`;
+          if (is10) {
+            linesH += `<text x="${x + 2}" y="10" fill="#8e9297" font-size="9" font-family="monospace">${mm}</text>`;
+          }
+        }
+
+        const totalMmV = Math.ceil(hDots / DOTS_PER_MM);
+        for (let mm = 0; mm <= totalMmV + 10; mm++) {
+          const y = offset + (mm * DOTS_PER_MM * zoom);
+          const is10 = (mm % 10 === 0);
+          const is5 = (mm % 5 === 0);
+          const x2 = is10 ? 0 : (is5 ? 10 : 16);
+          linesV += `<line x1="24" y1="${y}" x2="${x2}" y2="${y}" stroke="#585b62" stroke-width="1"/>`;
+          if (is10) {
+            linesV += `<text x="2" y="${y + 9}" fill="#8e9297" font-size="8" font-family="monospace">${mm}</text>`;
+          }
+        }
+      }
+
+      svgH.innerHTML = linesH;
+      svgV.innerHTML = linesV;
+    }
+
+    function btSyncRulers() {
+      const scroll = document.getElementById('btCanvasScroll');
+      const rulerH = document.getElementById('btRulerH');
+      const rulerV = document.getElementById('btRulerV');
+      if (rulerH) rulerH.scrollLeft = scroll.scrollLeft;
+      if (rulerV) rulerV.scrollTop = scroll.scrollTop;
+    }
+
+    // Zoom & Unit Actions
+    function btZoom(delta) {
+      btState.zoom = Math.max(0.4, Math.min(2.5, btState.zoom + delta));
+      document.getElementById('btZoomVal').innerText = `${Math.round(btState.zoom * 100)}%`;
+      btRenderBoard();
+    }
+
+    function btZoomReset() {
+      btState.zoom = 1.0;
+      document.getElementById('btZoomVal').innerText = '100%';
+      btRenderBoard();
+    }
+
+    function btChangeUnit(newUnit) {
+      btState.unit = newUnit;
+      document.querySelectorAll('.unit-label').forEach(el => el.innerText = newUnit);
+      document.getElementById('btRulerCorner').innerText = newUnit;
+      btUpdateInspector();
+      btDrawRulers();
+    }
+
+    function btToggleSnap() {
+      btState.snapGrid = !btState.snapGrid;
+      const btn = document.getElementById('btnSnapGrid');
+      btn.innerText = btState.snapGrid ? 'Snap: 1mm' : 'Snap: Off';
+      btn.style.color = btState.snapGrid ? '#4ade80' : '#8e9297';
+    }
+
+    function btToggleGrid() {
+      btState.showGrid = !btState.showGrid;
+      const btn = document.getElementById('btnShowGrid');
+      btn.innerText = btState.showGrid ? 'Grid: On' : 'Grid: Off';
+      btn.style.color = btState.showGrid ? '#38bdf8' : '#8e9297';
+      btRenderBoard();
+    }
+
+    // Mouse and Keyboard Listeners
+    function btSetupCanvasListeners() {
+      const board = document.getElementById('btLabelPaper');
+
+      board.addEventListener('mousemove', (e) => {
+        const rect = board.getBoundingClientRect();
+        const rawX = (e.clientX - rect.left) / btState.zoom;
+        const rawY = (e.clientY - rect.top) / btState.zoom;
+        const curX = Math.max(0, Math.round(rawX));
+        const curY = Math.max(0, Math.round(rawY));
+        document.getElementById('btCoordCursor').innerText = `X: ${btDotsToDisplay(curX)} ${btState.unit} | Y: ${btDotsToDisplay(curY)} ${btState.unit}`;
+      });
+
+      document.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('#btLabelPaper')) return;
+
+        const handle = e.target.closest('.bt-handle');
+        if (handle) {
+          if (handle.dataset.handle === 'rot') {
+            btRotateSelected(90);
+            e.stopPropagation();
+            return;
+          }
+          btResizing = true;
+          btResizeHandle = handle.dataset.handle;
+          btDragStartX = e.clientX;
+          btDragStartY = e.clientY;
+          const elem = btState.elements.find(el => el.id === btState.selectedId);
+          if (elem) btElemStartGeo = { ...elem };
+          e.stopPropagation();
+          return;
+        }
+
+        const targetElem = e.target.closest('.bt-elem');
+        if (targetElem) {
+          btState.selectedId = targetElem.id;
+          btDragging = true;
+          btDragStartX = e.clientX;
+          btDragStartY = e.clientY;
+          const elem = btState.elements.find(el => el.id === btState.selectedId);
+          if (elem) btElemStartGeo = { ...elem };
+          btRenderBoard();
+          btUpdateInspector();
+          e.stopPropagation();
+        }
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!btDragging && !btResizing) return;
+        const elem = btState.elements.find(el => el.id === btState.selectedId);
+        if (!elem) return;
+
+        const dx = (e.clientX - btDragStartX) / btState.zoom;
+        const dy = (e.clientY - btDragStartY) / btState.zoom;
+
+        if (btDragging) {
+          let newX = btElemStartGeo.x + dx;
+          let newY = btElemStartGeo.y + dy;
+          if (btState.snapGrid) {
+            newX = Math.round(newX / btState.snapDots) * btState.snapDots;
+            newY = Math.round(newY / btState.snapDots) * btState.snapDots;
+          }
+          elem.x = Math.max(0, Math.min(btState.width_dots - 20, newX));
+          elem.y = Math.max(0, Math.min(btState.height_dots - 10, newY));
+
+          const elDiv = document.getElementById(elem.id);
+          if (elDiv) {
+            elDiv.style.left = `${elem.x}px`;
+            elDiv.style.top = `${elem.y}px`;
+          }
+          const propX = document.getElementById('propX');
+          const propY = document.getElementById('propY');
+          if (propX) propX.value = btDotsToDisplay(elem.x);
+          if (propY) propY.value = btDotsToDisplay(elem.y);
+          const coordEl = document.getElementById('btCoordSelect');
+          if (coordEl) coordEl.innerText = `${elem.type.toUpperCase()} [${Math.round(elem.x)}, ${Math.round(elem.y)}]`;
+        } else if (btResizing) {
+          let newW = btElemStartGeo.width;
+          let newH = btElemStartGeo.height;
+          if (btResizeHandle.includes('e')) newW = Math.max(16, btElemStartGeo.width + dx);
+          if (btResizeHandle.includes('s')) newH = Math.max(8, btElemStartGeo.height + dy);
+          if (btResizeHandle.includes('w')) {
+            const potentialW = Math.max(16, btElemStartGeo.width - dx);
+            elem.x = btElemStartGeo.x + (btElemStartGeo.width - potentialW);
+            newW = potentialW;
+          }
+          if (btResizeHandle.includes('n')) {
+            const potentialH = Math.max(8, btElemStartGeo.height - dy);
+            elem.y = btElemStartGeo.y + (btElemStartGeo.height - potentialH);
+            newH = potentialH;
+          }
+
+          if (btState.snapGrid) {
+            newW = Math.round(newW / btState.snapDots) * btState.snapDots;
+            newH = Math.round(newH / btState.snapDots) * btState.snapDots;
+          }
+          elem.width = newW;
+          elem.height = newH;
+
+          const elDiv = document.getElementById(elem.id);
+          if (elDiv) {
+            elDiv.style.left = `${elem.x}px`;
+            elDiv.style.top = `${elem.y}px`;
+            elDiv.style.width = `${elem.width}px`;
+            elDiv.style.height = `${elem.height}px`;
+          }
+          const propW = document.getElementById('propWidth');
+          const propH = document.getElementById('propHeight');
+          if (propW) propW.value = btDotsToDisplay(elem.width);
+          if (propH) propH.value = btDotsToDisplay(elem.height);
+          const coordEl = document.getElementById('btCoordSelect');
+          if (coordEl) coordEl.innerText = `${elem.type.toUpperCase()} [${Math.round(elem.x)}, ${Math.round(elem.y)}]`;
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (btDragging || btResizing) {
+          btDragging = false;
+          btResizing = false;
+          btRenderBoard();
+          btUpdateInspector();
+          btUpdateLivePplb();
+          btSaveHistory();
+        }
+      });
+    }
+
+    let btNudging = false;
+    function btSetupKeyboardListeners() {
+      document.addEventListener('keydown', (e) => {
+        if (currentAppMode !== 'designer') return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          btDeleteSelected();
+          e.preventDefault();
+        } else if (e.key === 'Escape') {
+          btState.selectedId = null;
+          btRenderBoard();
+          btUpdateInspector();
+        } else if (e.key.startsWith('Arrow') && btState.selectedId) {
+          const elem = btState.elements.find(el => el.id === btState.selectedId);
+          if (!elem) return;
+          btNudging = true;
+          const step = e.shiftKey ? 8 : 1;
+          if (e.key === 'ArrowLeft') elem.x = Math.max(0, elem.x - step);
+          if (e.key === 'ArrowRight') elem.x = Math.min(btState.width_dots - 10, elem.x + step);
+          if (e.key === 'ArrowUp') elem.y = Math.max(0, elem.y - step);
+          if (e.key === 'ArrowDown') elem.y = Math.min(btState.height_dots - 10, elem.y + step);
+          btRenderBoard();
+          btUpdateInspector();
+          e.preventDefault();
+        } else if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+          if (e.shiftKey) btRedo(); else btUndo();
+          e.preventDefault();
+        } else if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+          btRedo();
+          e.preventDefault();
+        }
+      });
+
+      document.addEventListener('keyup', (e) => {
+        if (btNudging && e.key.startsWith('Arrow')) {
+          btNudging = false;
+          btUpdateLivePplb();
+          btSaveHistory();
+        }
+      });
+    }
+
+    function btOnBoardClick(e) {
+      if (e.target.id === 'btLabelPaper') {
+        btState.selectedId = null;
+        btRenderBoard();
+        btUpdateInspector();
+      }
+    }
+
+    // Element Manipulation
+    function btAddElement(type) {
+      btSaveHistory();
+      const stagger = (btState.elements.length % 6) * 20;
+      const newElem = {
+        id: `elem_${Date.now()}`,
+        type: type === 'date' ? 'text' : type,
+        x: 50 + stagger,
+        y: 50 + stagger,
+        rotation: 0
+      };
+
+      if (type === 'text') {
+        newElem.content = "SAMPLE TEXT";
+        newElem.font = 3;
+        newElem.font_family = "'Courier New', Courier, monospace";
+        newElem.h_mult = 1;
+        newElem.v_mult = 1;
+        newElem.reverse = false;
+        newElem.width = 160;
+        newElem.height = 24;
+      } else if (type === 'date') {
+        const today = new Date().toISOString().slice(0, 10);
+        newElem.content = `DATE: ${today}`;
+        newElem.font = 2;
+        newElem.font_family = "'Courier New', Courier, monospace";
+        newElem.h_mult = 1;
+        newElem.v_mult = 1;
+        newElem.width = 180;
+        newElem.height = 20;
+      } else if (type === 'barcode_1d') {
+        newElem.content = "12345678";
+        newElem.barcode_type = "1";
+        newElem.narrow = 2;
+        newElem.wide = 5;
+        newElem.height = 60;
+        newElem.hri = "B";
+        newElem.width = 220;
+      } else if (type === 'barcode_2d') {
+        newElem.content = "https://label.station";
+        newElem.subtype = "QR";
+        newElem.model = 2;
+        newElem.cell_size = 4;
+        newElem.ecc = "M";
+        newElem.width = 100;
+        newElem.height = 100;
+      } else if (type === 'line') {
+        newElem.width = 700;
+        newElem.height = 4;
+        newElem.thickness = 4;
+      } else if (type === 'box') {
+        newElem.width = 700;
+        newElem.height = 300;
+        newElem.thickness = 2;
+      }
+
+      btState.elements.push(newElem);
+      btState.selectedId = newElem.id;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    function btInsertVariableElement(varTag) {
+      const selected = btState.elements.find(el => el.id === btState.selectedId);
+      if (selected && selected.type === 'text') {
+        btSaveHistory();
+        selected.content = (selected.content ? selected.content + " " : "") + varTag;
+        selected.width = btEstimateElementWidth(selected);
+        btRenderBoard();
+        btUpdateInspector();
+        btUpdateLivePplb();
+        return;
+      }
+      btSaveHistory();
+      const stagger = (btState.elements.length % 6) * 20;
+      const newElem = {
+        id: `elem_${Date.now()}`,
+        type: 'text',
+        x: 50 + stagger,
+        y: 50 + stagger,
+        content: varTag,
+        font: 3,
+        font_family: "'Courier New', Courier, monospace",
+        h_mult: 1,
+        v_mult: 1,
+        reverse: false,
+        rotation: 0,
+        width: 220,
+        height: 24
+      };
+      btState.elements.push(newElem);
+      btState.selectedId = newElem.id;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    function btInsertVariableBarcode(varTag) {
+      const selected = btState.elements.find(el => el.id === btState.selectedId);
+      if (selected && selected.type === 'barcode_1d') {
+        btSaveHistory();
+        selected.content = varTag;
+        selected.width = btEstimateElementWidth(selected);
+        btRenderBoard();
+        btUpdateInspector();
+        btUpdateLivePplb();
+        return;
+      }
+      btSaveHistory();
+      const stagger = (btState.elements.length % 6) * 20;
+      const newElem = {
+        id: `elem_${Date.now()}`,
+        type: 'barcode_1d',
+        x: 50 + stagger,
+        y: 120 + stagger,
+        content: varTag,
+        barcode_type: '1',
+        narrow: 2,
+        wide: 5,
+        height: 60,
+        hri: 'B',
+        rotation: 0,
+        width: 240
+      };
+      btState.elements.push(newElem);
+      btState.selectedId = newElem.id;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    function btRotateSelected(deg) {
+      const elem = btState.elements.find(el => el.id === btState.selectedId);
+      if (!elem) return;
+      btSaveHistory();
+      elem.rotation = ((elem.rotation || 0) + Math.round(deg / 90)) % 4;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    function btDuplicateSelected() {
+      const elem = btState.elements.find(el => el.id === btState.selectedId);
+      if (!elem) return;
+      btSaveHistory();
+      const copy = JSON.parse(JSON.stringify(elem));
+      copy.id = `elem_${Date.now()}`;
+      copy.x = Math.min(btState.width_dots - 20, copy.x + 20);
+      copy.y = Math.min(btState.height_dots - 20, copy.y + 20);
+      btState.elements.push(copy);
+      btState.selectedId = copy.id;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    function btDeleteSelected() {
+      if (!btState.selectedId) return;
+      btSaveHistory();
+      btState.elements = btState.elements.filter(el => el.id !== btState.selectedId);
+      btState.selectedId = null;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    function btClearCanvas() {
+      if (!confirm("Clear all elements on current label canvas?")) return;
+      btSaveHistory();
+      btState.elements = [];
+      btState.selectedId = null;
+      btRenderBoard();
+      btUpdateInspector();
+      btUpdateLivePplb();
+    }
+
+    // Inspector Updating
+    function btSwitchInspectorTab(tab) {
+      const paneElem = document.getElementById('btPaneElemProps');
+      const paneSetup = document.getElementById('btPaneLabelSetup');
+      const btnElem = document.getElementById('btnTabElemProps');
+      const btnSetup = document.getElementById('btnTabLabelSetup');
+
+      if (tab === 'setup') {
+        paneElem.style.display = 'none';
+        paneSetup.style.display = 'flex';
+        btnElem.classList.remove('active');
+        btnSetup.classList.add('active');
+      } else {
+        paneElem.style.display = 'flex';
+        paneSetup.style.display = 'none';
+        btnElem.classList.add('active');
+        btnSetup.classList.remove('active');
+      }
+    }
+
+    function btUpdateInspector() {
+      const noElem = document.getElementById('btNoElemSelected');
+      const controls = document.getElementById('btElemControls');
+      const elem = btState.elements.find(el => el.id === btState.selectedId);
+
+      if (!elem) {
+        noElem.style.display = 'block';
+        controls.style.display = 'none';
+        document.getElementById('btCoordSelect').innerText = 'None';
+        return;
+      }
+
+      noElem.style.display = 'none';
+      controls.style.display = 'flex';
+      document.getElementById('btCoordSelect').innerText = `${elem.type.toUpperCase()} [${Math.round(elem.x)}, ${Math.round(elem.y)}]`;
+
+      document.getElementById('btElemTypeBadge').innerText = elem.type.toUpperCase();
+      document.getElementById('propX').value = btDotsToDisplay(elem.x);
+      document.getElementById('propY').value = btDotsToDisplay(elem.y);
+      document.getElementById('propWidth').value = btDotsToDisplay(elem.width);
+      document.getElementById('propHeight').value = btDotsToDisplay(elem.height);
+      document.getElementById('propRotation').value = elem.rotation || 0;
+
+      // Type Specific Views
+      document.getElementById('btPropsText').style.display = elem.type === 'text' ? 'flex' : 'none';
+      document.getElementById('btPropsBarcode1D').style.display = elem.type === 'barcode_1d' ? 'flex' : 'none';
+      document.getElementById('btPropsBarcode2D').style.display = elem.type === 'barcode_2d' ? 'flex' : 'none';
+      document.getElementById('btPropsShape').style.display = (elem.type === 'line' || elem.type === 'box') ? 'flex' : 'none';
+
+      if (elem.type === 'text') {
+        document.getElementById('propTextContent').value = elem.content || '';
+        document.getElementById('propFont').value = elem.font || 3;
+        const fontFam = document.getElementById('propFontFamily');
+        if (fontFam) fontFam.value = elem.font_family || "'Courier New', Courier, monospace";
+        document.getElementById('propHMult').value = elem.h_mult || 1;
+        document.getElementById('propVMult').value = elem.v_mult || 1;
+        document.getElementById('propReverse').checked = !!elem.reverse;
+      } else if (elem.type === 'barcode_1d') {
+        document.getElementById('propBarcodeData').value = elem.content || '';
+        document.getElementById('propBarcodeType').value = elem.barcode_type || '1';
+        document.getElementById('propBarcodeHRI').value = elem.hri || 'B';
+        document.getElementById('propNarrow').value = elem.narrow || 2;
+        document.getElementById('propWide').value = elem.wide || 5;
+      } else if (elem.type === 'barcode_2d') {
+        document.getElementById('propBarcode2DData').value = elem.content || '';
+        document.getElementById('propBarcode2DSubtype').value = elem.subtype || 'QR';
+        document.getElementById('propCellSize').value = elem.cell_size || 4;
+        document.getElementById('propECC').value = elem.ecc || 'M';
+      } else if (elem.type === 'line' || elem.type === 'box') {
+        document.getElementById('propThickness').value = elem.thickness || (elem.type === 'line' ? elem.height : 2) || 2;
+      }
+    }
+
+    function btUpdateProp(prop, val) {
+      const elem = btState.elements.find(el => el.id === btState.selectedId);
+      if (!elem) return;
+
+      if (prop === 'x' || prop === 'y' || prop === 'width') {
+        elem[prop] = btDisplayToDots(val);
+      } else if (prop === 'height') {
+        elem.height = btDisplayToDots(val);
+        if (elem.type === 'line') elem.thickness = elem.height;
+      } else if (prop === 'thickness') {
+        elem.thickness = parseInt(val) || 2;
+        if (elem.type === 'line') elem.height = elem.thickness;
+      } else if (prop === 'font' || prop === 'h_mult' || prop === 'v_mult' || prop === 'rotation' || prop === 'cell_size' || prop === 'narrow' || prop === 'wide') {
+        elem[prop] = parseInt(val) || 0;
+      } else if (prop === 'reverse') {
+        elem.reverse = !!val;
+      } else {
+        elem[prop] = val;
+      }
+
+      btRenderBoard();
+      btUpdateLivePplb();
+      btSaveHistory();
+    }
+
+    function btUpdateLabelDim(dim, val) {
+      const dots = btDisplayToDots(val);
+      if (dim === 'width') btState.width_dots = Math.max(100, Math.min(832, dots));
+      if (dim === 'height') btState.height_dots = Math.max(100, Math.min(2400, dots));
+      btRenderBoard();
+      btDrawRulers();
+      btUpdateLivePplb();
+      btSaveHistory();
+    }
+
+    function btUpdateGlobalParam(param, val) {
+      btState[param] = parseInt(val) || 0;
+      btUpdateLivePplb();
+      btSaveHistory();
+    }
+
+    // Live PPLB Stream Output
+    function btUpdateLivePplb() {
+      const streamEl = document.getElementById('btPplbStream');
+      if (!streamEl) return;
+
+      const lines = [
+        "N",
+        `q${btState.width_dots}`,
+        `Q${btState.height_dots},${btState.gap_dots}`,
+        `D${btState.density}`,
+        `S${btState.speed}`
+      ];
+
+      btState.elements.forEach(e => {
+        const x = Math.round(e.x);
+        const y = Math.round(e.y);
+        const rot = e.rotation || 0;
+
+        if (e.type === 'text') {
+          const rev = e.reverse ? 'R' : 'N';
+          lines.push(`A${x},${y},${rot},${e.font || 3},${e.h_mult || 1},${e.v_mult || 1},${rev},"${e.content || ''}"`);
+        } else if (e.type === 'barcode_1d') {
+          lines.push(`B${x},${y},${rot},${e.barcode_type || '1'},${e.narrow || 2},${e.wide || 5},${Math.round(e.height || 60)},${e.hri || 'B'},"${e.content || ''}"`);
+        } else if (e.type === 'barcode_2d') {
+          if ((e.subtype || 'QR').toUpperCase() === 'QR') {
+            lines.push(`b${x},${y},Q,s${e.model || 2},m${e.cell_size || 4},r${e.ecc || 'M'},"${e.content || ''}"`);
+          } else {
+            lines.push(`b${x},${y},D,c0,r0,"${e.content || ''}"`);
+          }
+        } else if (e.type === 'line') {
+          lines.push(`LO${x},${y},${Math.round(e.width || 700)},${Math.round(e.height || 4)}`);
+        } else if (e.type === 'box') {
+          lines.push(`X${x},${y},${e.thickness || 2},${Math.round(e.width || 700)},${Math.round(e.height || 300)}`);
+        }
+      });
+
+      lines.push(`P${btState.copies || 1}`);
+      streamEl.innerText = lines.join("\n");
+    }
+
+    function btCopyPplb() {
+      const stream = document.getElementById('btPplbStream').innerText;
+      navigator.clipboard.writeText(stream).then(() => {
+        alert("PPLB Command Stream copied to clipboard.");
+      }).catch(err => {
+        alert(`Failed to copy: ${err}`);
+      });
+    }
+
+    // Auto-refresh queue every 3 seconds for WMS
+    setInterval(() => {
+      if (currentAppMode === 'wms') loadData();
+    }, 3000);
+
+    window.onload = () => {
+      loadData();
+    };
   </script>
 </body>
 </html>

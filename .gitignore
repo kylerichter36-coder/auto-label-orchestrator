@@ -28,3 +28,8 @@ scratch/
 # OS-specific
 .DS_Store
 Thumbs.db
+
+# Runtime backup and snapshots
+backup_storage/
+snapshots/
+*.tar.gz

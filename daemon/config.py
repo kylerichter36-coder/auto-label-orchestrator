@@ -19,6 +19,8 @@ except ImportError:
                     os.environ.setdefault(k.strip(), v.strip())
 
 class Config:
+    BASE_DIR = BASE_DIR
+
     # Gemini API Key Pool (split by comma)
     _raw_keys = os.getenv("GEMINI_API_KEYS", "")
     GEMINI_API_KEYS = [k.strip() for k in _raw_keys.split(",") if k.strip()]
@@ -26,7 +28,7 @@ class Config:
         GEMINI_API_KEYS = [os.getenv("GEMINI_API_KEY").strip()]
 
     # Model parameters
-    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     MAX_OUTPUT_TOKENS = int(os.getenv("MAX_OUTPUT_TOKENS", "1024"))
     TEMPERATURE = float(os.getenv("TEMPERATURE", "0.0"))
 
@@ -34,6 +36,7 @@ class Config:
     SMTP_HOST = os.getenv("SMTP_HOST", "0.0.0.0")
     SMTP_PORT = int(os.getenv("SMTP_PORT", "2525"))
     DIRECT_ETH_IP = os.getenv("DIRECT_ETH_IP", "192.168.50.1")
+    SCANNER_IP = os.getenv("SCANNER_IP", "192.168.50.2")
 
     # Web Dashboard
     WEB_HOST = os.getenv("WEB_HOST", "0.0.0.0")
@@ -46,9 +49,16 @@ class Config:
     # Directories
     LABEL_DIR = Path(os.getenv("LABEL_DIR", str(BASE_DIR / "templates" / "sample_labels")))
     TEMPLATE_DIR = Path(os.getenv("TEMPLATE_DIR", str(BASE_DIR / "templates")))
-    
+
+    # SD Card & Non-Volatile Persistence Storage
+    SDCARD_MOUNT = Path(os.getenv("SDCARD_MOUNT", "/mnt/sdcard_backup"))
+    FALLBACK_STORAGE_DIR = Path(os.getenv("FALLBACK_STORAGE_DIR", str(BASE_DIR / "backup_storage")))
+    AUDIT_LOG_DIR = Path(os.getenv("AUDIT_LOG_DIR", str(SDCARD_MOUNT / "audit_logs" if SDCARD_MOUNT.exists() else BASE_DIR / "audit_logs")))
+
     # Ensure local dev directories exist
     LABEL_DIR.mkdir(parents=True, exist_ok=True)
     TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
+    FALLBACK_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+    AUDIT_LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 config = Config()

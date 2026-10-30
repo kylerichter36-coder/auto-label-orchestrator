@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<XMLScript Version="2.0">
+  <Command Name="Job_Cartridge_Print">
+    <Print>
+      <Format>CANON_716_BLACK.btw</Format>
+      <RecordSet Name="CartridgeRecords" Type="btTextFile">
+        <Record>
+          <Field Name="ITEM_NAME">CANON 716 BLACK</Field>
+          <Field Name="BARCODE">CRG-716BK</Field>
+          <Field Name="QUANTITY">25</Field>
+          <Field Name="NOTE">Warehouse Batch B4</Field>
+        </Record>
+      </RecordSet>
+    </Print>
+  </Command>
+</XMLScript>
