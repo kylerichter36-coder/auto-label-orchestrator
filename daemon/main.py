@@ -90,16 +90,19 @@ class AutoLabelOrchestrator:
             logger.error(f"Error processing scanned PDF: {e}", exc_info=True)
 
     async def start(self):
-        # Start SMTP server
-        self.smtp_server.start()
-
-        # Start Web Dashboard
+        # 1. Start Web Dashboard first so port 8080 is immediately available
         runner = web.AppRunner(self.web_dashboard.app)
         await runner.setup()
         site = web.TCPSite(runner, config.WEB_HOST, config.WEB_PORT)
         await site.start()
         logger.info(f"BarTender Web Dashboard live at http://{config.WEB_HOST}:{config.WEB_PORT}")
-        logger.info(f"Listening for Lexmark scans on {config.SMTP_HOST}:{config.SMTP_PORT}")
+
+        # 2. Start local SMTP listener with resilient error handling
+        try:
+            self.smtp_server.start()
+            logger.info(f"Listening for Lexmark scans on {config.SMTP_HOST}:{config.SMTP_PORT}")
+        except Exception as se:
+            logger.warning(f"Could not start local SMTP server: {se}")
 
         # Keep running
         while True:

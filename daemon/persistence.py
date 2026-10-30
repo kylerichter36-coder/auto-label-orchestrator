@@ -27,7 +27,7 @@ class PersistenceManager:
         sd_mount: Optional[Union[str, Path]] = None,
         fallback_dir: Optional[Union[str, Path]] = None
     ):
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self.sd_mount = Path(sd_mount) if sd_mount else config.SDCARD_MOUNT
         self.sdcard_mount = self.sd_mount
         self.fallback_dir = Path(fallback_dir) if fallback_dir else config.FALLBACK_STORAGE_DIR
@@ -415,9 +415,12 @@ class PersistenceManager:
         from daemon.color_queue import QueuedPrintJob
         from daemon.classifier import OuterBoxSheet
 
-        # Clear existing entries
-        if hasattr(queue_mgr, "clear_all"):
-            queue_mgr.clear_all()
+        # Clear existing entries without triggering redundant persistence re-write
+        if hasattr(queue_mgr, "queues") and isinstance(queue_mgr.queues, dict):
+            for c in queue_mgr.queues:
+                queue_mgr.queues[c].clear()
+        if hasattr(queue_mgr, "pending_outer_boxes") and isinstance(queue_mgr.pending_outer_boxes, list):
+            queue_mgr.pending_outer_boxes.clear()
 
         # Restore color queues
         raw_queues = data.get("queues", {})
